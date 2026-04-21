@@ -19,28 +19,62 @@ interface YearlySnapshot {
   netWorth: number;
 }
 
+interface LoanPayoffResult {
+  months: number | null;
+  totalInterest: number | null;
+  schedule: number[];
+  canPayOff: boolean;
+  error: string | null;
+}
+
+const PAYMENT_TOO_LOW_ERROR =
+  "Monthly payment does not cover accrued interest — the loan will never be paid off.";
+
 function calculateLoanPayoff(
   balance: number,
   annualRate: number,
   monthlyPayment: number
-): { months: number; totalInterest: number; schedule: number[] } {
+): LoanPayoffResult {
   const monthlyRate = annualRate / 100 / 12;
   let remaining = balance;
   let months = 0;
   let totalInterest = 0;
   const schedule: number[] = [balance];
 
+  if (remaining <= 0.01) {
+    return { months: 0, totalInterest: 0, schedule, canPayOff: true, error: null };
+  }
+
+  const firstMonthInterest = remaining * monthlyRate;
+  if (monthlyPayment <= firstMonthInterest) {
+    return {
+      months: null,
+      totalInterest: null,
+      schedule,
+      canPayOff: false,
+      error: PAYMENT_TOO_LOW_ERROR,
+    };
+  }
+
   while (remaining > 0.01 && months < 600) {
     const interest = remaining * monthlyRate;
     const principal = Math.min(monthlyPayment - interest, remaining);
-    if (principal <= 0) break; // payment doesn't cover interest
+    if (principal <= 0) {
+      return {
+        months: null,
+        totalInterest: null,
+        schedule,
+        canPayOff: false,
+        error: PAYMENT_TOO_LOW_ERROR,
+      };
+    }
     totalInterest += interest;
     remaining -= principal;
     months++;
     if (months % 12 === 0) schedule.push(Math.max(0, remaining));
   }
 
-  return { months, totalInterest, schedule };
+  return { months, totalInterest, schedule, canPayOff: true, error: null };
 }
 
 function buildYearlySnapshots(inputs: Inputs): YearlySnapshot[] {
@@ -164,7 +198,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"table" | "summary">("summary");
 
   const set = (field: keyof Inputs) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
+    const rawValue = e.target.value;
+    const val = rawValue === "" ? 0 : parseFloat(rawValue);
     if (!isNaN(val)) setInputs((prev) => ({ ...prev, [field]: val }));
   };
 
@@ -191,8 +226,8 @@ export default function Home() {
   const scenarioA = useMemo(() => buildYearlySnapshots(inputs), [inputs]);
   const scenarioB = useMemo(() => buildScenarioBSnapshots(inputs), [inputs]);
 
-  const payoffYearsA = Math.ceil(loanPayoff.months / 12);
-  const payoffYearsB = Math.ceil(minPayoff.months / 12);
+  const payoffYearsA = loanPayoff.months != null ? Math.ceil(loanPayoff.months / 12) : null;
+  const payoffYearsB = minPayoff.months != null ? Math.ceil(minPayoff.months / 12) : null;
 
   const at30A = scenarioA[scenarioA.length - 1];
   const at30B = scenarioB[scenarioB.length - 1];
@@ -218,10 +253,11 @@ export default function Home() {
         {/* Input Section */}
         <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="loanBalance" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Loan Balance ($)
             </label>
             <input
+              id="loanBalance"
               type="number"
               min={0}
               value={inputs.loanBalance}
@@ -231,10 +267,11 @@ export default function Home() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="loanInterestRate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Loan Interest Rate (%)
             </label>
             <input
+              id="loanInterestRate"
               type="number"
               min={0}
               step={0.1}
@@ -245,10 +282,11 @@ export default function Home() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="minimumMonthlyPayment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Minimum Monthly Payment ($)
             </label>
             <input
+              id="minimumMonthlyPayment"
               type="number"
               min={0}
               value={inputs.minimumMonthlyPayment}
@@ -258,26 +296,29 @@ export default function Home() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="extraMonthlyPayment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Extra Monthly Amount ($)
             </label>
             <input
+              id="extraMonthlyPayment"
               type="number"
               min={0}
               value={inputs.extraMonthlyPayment}
               onChange={set("extraMonthlyPayment")}
+              aria-describedby="extraMonthlyPayment-hint"
               className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-400">
+            <p id="extraMonthlyPayment-hint" className="text-xs text-gray-400">
               Applied to loan (A) or investments (B) each month
             </p>
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="investmentReturnRate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Expected Investment Return (%)
             </label>
             <input
+              id="investmentReturnRate"
               type="number"
               min={0}
               step={0.1}
@@ -288,10 +329,11 @@ export default function Home() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="taxRate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Capital Gains Tax Rate (%)
             </label>
             <input
+              id="taxRate"
               type="number"
               min={0}
               max={100}
@@ -319,9 +361,11 @@ export default function Home() {
                   Payoff time
                 </dt>
                 <dd className="font-semibold text-blue-700 dark:text-blue-300">
-                  {loanPayoff.months > 0
+                  {loanPayoff.canPayOff && loanPayoff.months != null && loanPayoff.months > 0
                     ? `${payoffYearsA} yr${payoffYearsA !== 1 ? "s" : ""} (${loanPayoff.months} mo)`
-                    : "—"}
+                    : loanPayoff.canPayOff
+                    ? "Already paid"
+                    : "Never"}
                 </dd>
               </div>
               <div>
@@ -329,7 +373,7 @@ export default function Home() {
                   Interest paid
                 </dt>
                 <dd className="font-semibold text-blue-700 dark:text-blue-300">
-                  {fmt(loanPayoff.totalInterest)}
+                  {loanPayoff.totalInterest != null ? fmt(loanPayoff.totalInterest) : "—"}
                 </dd>
               </div>
               <div>
@@ -365,9 +409,11 @@ export default function Home() {
                   Payoff time
                 </dt>
                 <dd className="font-semibold text-green-700 dark:text-green-300">
-                  {minPayoff.months > 0
+                  {minPayoff.canPayOff && minPayoff.months != null && minPayoff.months > 0
                     ? `${payoffYearsB} yr${payoffYearsB !== 1 ? "s" : ""} (${minPayoff.months} mo)`
-                    : "—"}
+                    : minPayoff.canPayOff
+                    ? "Already paid"
+                    : "Never"}
                 </dd>
               </div>
               <div>
@@ -375,7 +421,7 @@ export default function Home() {
                   Interest paid
                 </dt>
                 <dd className="font-semibold text-green-700 dark:text-green-300">
-                  {fmt(minPayoff.totalInterest)}
+                  {minPayoff.totalInterest != null ? fmt(minPayoff.totalInterest) : "—"}
                 </dd>
               </div>
               <div>
@@ -397,6 +443,19 @@ export default function Home() {
             </dl>
           </div>
         </section>
+
+        {/* Payment warning */}
+        {(!loanPayoff.canPayOff || !minPayoff.canPayOff) && (
+          <div className="rounded-lg bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 px-5 py-3 text-sm text-amber-800 dark:text-amber-200">
+            ⚠️{" "}
+            {!loanPayoff.canPayOff && !minPayoff.canPayOff
+              ? "Both scenarios: " + PAYMENT_TOO_LOW_ERROR
+              : !loanPayoff.canPayOff
+              ? "Scenario A: " + loanPayoff.error
+              : "Scenario B: " + minPayoff.error}
+            {" "}Increase the monthly payment to see payoff projections.
+          </div>
+        )}
 
         {/* Winner Banner */}
         {at30A && at30B && (
