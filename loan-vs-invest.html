@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan vs Investment Planner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --border: #22222e;
+    --loan-color: #ff4d6d;
+    --invest-color: #00d4aa;
+    --split-color: #7c6af7;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --accent: #ffd166;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  .header { text-align: center; margin-bottom: 28px; }
+  .header h1 { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+  .header h1 span { color: var(--accent); }
+  .header p { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-top: 8px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .pill-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  .pill { font-family: 'DM Mono', monospace; font-size: 0.7rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); background: var(--surface); }
+  .pill strong { color: var(--text); }
+
+  .tabs { display: flex; gap: 4px; max-width: 720px; margin: 0 auto 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+  .tab { flex: 1; padding: 10px; text-align: center; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; border: none; background: transparent; font-family: 'Syne', sans-serif; }
+  .tab.active { background: var(--border); color: var(--text); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .controls { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; max-width: 720px; margin-left: auto; margin-right: auto; }
+  .controls h2 { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+
+  .slider-group { margin-bottom: 20px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .slider-label span { font-size: 0.9rem; font-weight: 600; }
+  .slider-label .val { font-family: 'DM Mono', monospace; font-size: 1.05rem; color: var(--accent); font-weight: 500; }
+
+  input[type=range] { width: 100%; appearance: none; height: 4px; border-radius: 99px; outline: none; cursor: pointer; background: var(--border); }
+  input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 0 3px rgba(255,209,102,0.2); }
+  input[type=range].invest-slider::-webkit-slider-thumb { background: var(--split-color); box-shadow: 0 0 0 3px rgba(124,106,247,0.2); }
+
+  .split-viz { display: flex; height: 8px; border-radius: 99px; overflow: hidden; margin-top: 10px; gap: 2px; }
+  .split-debt { background: var(--loan-color); transition: width 0.2s; }
+  .split-invest { background: var(--invest-color); transition: width 0.2s; }
+  .split-labels { display: flex; justify-content: space-between; margin-top: 6px; font-family: 'DM Mono', monospace; font-size: 0.68rem; }
+  .split-labels .dl { color: var(--loan-color); }
+  .split-labels .il { color: var(--invest-color); }
+
+  .rate-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 720px; margin: 0 auto 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+  .stat-card .label { font-family: 'DM Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+  .stat-card .value { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-card .sub { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
+  .debt-val { color: var(--loan-color); }
+  .invest-val { color: var(--invest-color); }
+
+  .chart-wrap { max-width: 720px; margin: 0 auto 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+  .chart-title { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .chart-subtitle { font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .optimal-callout { max-width: 720px; margin: 0 auto 20px; border-radius: 16px; padding: 20px 24px; border: 1px solid; }
+  .optimal-callout.green { border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.07); }
+  .optimal-callout.yellow { border-color: rgba(255,209,102,0.3); background: rgba(255,209,102,0.07); }
+  .optimal-callout h3 { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+  .optimal-callout h3.green { color: var(--invest-color); }
+  .optimal-callout h3.yellow { color: var(--accent); }
+  .optimal-callout p { font-size: 0.88rem; line-height: 1.75; color: var(--text); }
+  .optimal-callout p strong { color: var(--accent); }
+  .optimal-callout p .g { color: var(--invest-color); }
+  .optimal-callout p .r { color: var(--loan-color); }
+
+  .verdict { max-width: 720px; margin: 0 auto 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; }
+  .verdict h3 { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .verdict-content { font-size: 0.88rem; line-height: 1.7; }
+  .verdict-content strong { color: var(--accent); }
+  .verdict-content .good { color: var(--invest-color); }
+  .verdict-content .bad { color: var(--loan-color); }
+
+  .pareto-note { margin-top: 10px; font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+
+  @media (max-width: 500px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .rate-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Loan vs Invest<br><span>Planner</span></h1>
+  <p>DBS Tuition Fee Loan · Singapore Polytechnic</p>
+</div>
+
+<div class="pill-row">
+  <div class="pill">Loan: <strong>S$23,000</strong></div>
+  <div class="pill">Rate: <strong>4.5% p.a.</strong></div>
+  <div class="pill">Max tenure: <strong>10 years</strong></div>
+  <div class="pill">Interest-free during study ✓</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-explorer" onclick="switchTab('explorer', this)">🎛 Explorer</button>
+  <button class="tab" id="tab-optimal" onclick="switchTab('optimal', this)">📐 Optimal Split</button>
+</div>
+
+<!-- TAB 1: EXPLORER -->
+<div class="panel active" id="panel-explorer">
+  <div class="controls">
+    <h2>Your inputs</h2>
+    <div class="slider-group">
+      <div class="slider-label"><span>Monthly budget</span><span class="val" id="budgetVal">S$600</span></div>
+      <input type="range" id="budget" min="200" max="2000" step="50" value="600">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>% going to investments</span><span class="val" id="investPctVal">30%</span></div>
+      <input type="range" class="invest-slider" id="investPct" min="0" max="100" step="5" value="30">
+      <div class="split-viz">
+        <div class="split-debt" id="splitDebtBar" style="width:70%"></div>
+        <div class="split-invest" id="splitInvestBar" style="width:30%"></div>
+      </div>
+      <div class="split-labels">
+        <span class="dl" id="debtLabel">Loan: S$420</span>
+        <span class="il" id="investLabel">Invest: S$180</span>
+      </div>
+    </div>
+    <div class="rate-row">
+      <div class="slider-group" style="margin-bottom:0">
+        <div class="slider-label"><span>Investment return (% p.a.)</span><span class="val" id="returnVal">7%</span></div>
+        <input type="range" id="returnRate" min="3" max="15" step="0.5" value="7">
+      </div>
+      <div class="slider-group" style="margin-bottom:0">
+        <div class="slider-label"><span>Loan interest rate</span><span class="val" id="loanRateVal">4.5%</span></div>
+        <input type="range" id="loanRate" min="2" max="8" step="0.1" value="4.5">
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Loan paid off</div><div class="value debt-val" id="statPayoff">—</div><div class="sub" id="statPayoffMo"></div></div>
+    <div class="stat-card"><div class="label">Total interest paid</div><div class="value debt-val" id="statInterest">—</div><div class="sub">to the bank</div></div>
+    <div class="stat-card"><div class="label">Net worth at 10yr</div><div class="value invest-val" id="statNetworth">—</div><div class="sub">portfolio − remaining loan</div></div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Loan balance & portfolio over time</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--loan-color)"></div>Loan balance</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--invest-color)"></div>Portfolio</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Net worth</div>
+    </div>
+    <canvas id="mainChart"></canvas>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Strategy comparison — net worth over time</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--loan-color)"></div>Pay debt first</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--invest-color)"></div>Invest first (min loan)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--split-color)"></div>Your split</div>
+    </div>
+    <canvas id="compareChart"></canvas>
+  </div>
+
+  <div class="verdict">
+    <h3>📊 Analysis</h3>
+    <div class="verdict-content" id="verdictText"></div>
+  </div>
+</div>
+
+<!-- TAB 2: OPTIMAL SPLIT -->
+<div class="panel" id="panel-optimal">
+  <div class="controls">
+    <h2>Assumptions</h2>
+    <div class="slider-group">
+      <div class="slider-label"><span>Monthly budget</span><span class="val" id="budgetVal2">S$600</span></div>
+      <input type="range" id="budget2" min="200" max="2000" step="50" value="600">
+    </div>
+    <div class="rate-row">
+      <div class="slider-group" style="margin-bottom:0">
+        <div class="slider-label"><span>Investment return (% p.a.)</span><span class="val" id="returnVal2">7%</span></div>
+        <input type="range" id="returnRate2" min="3" max="15" step="0.5" value="7">
+      </div>
+      <div class="slider-group" style="margin-bottom:0">
+        <div class="slider-label"><span>Loan interest rate</span><span class="val" id="loanRateVal2">4.5%</span></div>
+        <input type="range" id="loanRate2" min="2" max="8" step="0.1" value="4.5">
+      </div>
+    </div>
+  </div>
+
+  <div class="optimal-callout green" id="optimalCallout">
+    <h3 class="green" id="optimalTitle">Loading...</h3>
+    <p id="optimalBody"></p>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Pareto Frontier — the tradeoff curve</div>
+    <div class="chart-subtitle">Every dot is a different invest% split. Moving right = slower payoff. Moving up = higher net worth. The frontier shows exactly what you trade off between wealth and speed.</div>
+    <canvas id="paretoChart" height="300"></canvas>
+    <div class="pareto-note">★ gold = mathematically optimal (max net worth) &nbsp;·&nbsp; red = debt-first (fastest payoff) &nbsp;·&nbsp; each dot = 5% increment</div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Net worth at 10 years — by invest %</div>
+    <div class="chart-subtitle">The highlighted bar is your mathematical optimum. Bars to the left = more debt focus. Bars to the right = more investing.</div>
+    <canvas id="barChart" height="220"></canvas>
+  </div>
+
+  <div class="optimal-callout yellow">
+    <h3 class="yellow">⚠️ Real-world caveats</h3>
+    <p>
+      <span class="r">① Investment returns aren't guaranteed.</span> 7% is a long-run average — in any 3-year stretch you could be down 30% while the loan keeps accruing.<br><br>
+      <span class="r">② Psychological debt stress matters.</span> Being debt-free has non-financial value — it gives you more job flexibility and peace of mind.<br><br>
+      <span class="g">③ Time in market is powerful.</span> Starting to invest S$100/mo early beats waiting until the loan clears — the first years of compounding are the most valuable.<br><br>
+      <strong>Practical recommendation:</strong> Pay minimum ($100/mo) on the loan, build a 3-month emergency fund first, then invest the rest. Don't go 100% invest unless you have very stable income.
+    </p>
+  </div>
+</div>
+
+<script>
+const LOAN = 23000;
+const MONTHS = 120;
+
+function fmt(n) { return 'S$' + Math.round(n).toLocaleString(); }
+
+function simulate(budget, investFrac, annualReturn, annualLoanRate) {
+  const mr = Math.pow(1 + annualReturn/100, 1/12) - 1;
+  const mlr = annualLoanRate/100/12;
+  let loan = LOAN, portfolio = 0, totalInterest = 0, payoffMonth = null;
+  const loanH = [loan], portH = [0], netH = [-loan];
+
+  for (let m = 1; m <= MONTHS; m++) {
+    if (loan <= 0) {
+      portfolio = portfolio*(1+mr) + budget;
+      loanH.push(0); portH.push(portfolio); netH.push(portfolio);
+    } else {
+      const interest = loan * mlr;
+      totalInterest += interest;
+      let loanPay = budget*(1-investFrac);
+      let invest = budget*investFrac;
+      if (loanPay < 100) { loanPay = Math.min(100, budget); invest = Math.max(0, budget-loanPay); }
+      loan = loan + interest - loanPay;
+      if (loan <= 0) {
+        portfolio = portfolio*(1+mr) + invest + (-loan);
+        loan = 0;
+        if (!payoffMonth) payoffMonth = m;
+      } else {
+        portfolio = portfolio*(1+mr) + invest;
+      }
+      loanH.push(Math.max(0,loan)); portH.push(portfolio); netH.push(portfolio - Math.max(0,loan));
+    }
+  }
+  return { loanH, portH, netH, totalInterest, payoffMonth };
+}
+
+function buildPareto(budget, returnRate, loanRate) {
+  const pts = [];
+  for (let pct = 0; pct <= 100; pct += 5) {
+    const r = simulate(budget, pct/100, returnRate, loanRate);
+    pts.push({ pct, payoffMonth: r.payoffMonth || MONTHS, networth: r.netH[MONTHS], totalInterest: r.totalInterest });
+  }
+  return pts;
+}
+
+let mainChart, compareChart, paretoChart, barChart;
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const timeLabels = Array.from({length:MONTHS+1},(_,i)=> i===0?'Now':(i%12===0?`Yr ${i/12}`:''));
+
+const baseOpts = {
+  responsive: true, animation: {duration:250},
+  interaction: {mode:'index', intersect:false},
+  plugins: {
+    legend: {display:false},
+    tooltip: {
+      backgroundColor:'#13131a', borderColor:'#22222e', borderWidth:1,
+      titleColor:'#e8e8f0', bodyColor:'#6b6b80',
+      callbacks: { label: ctx => ` ${ctx.dataset.label}: S$${Math.round(ctx.raw).toLocaleString()}` }
+    }
+  },
+  scales: {
+    x: { grid:{color:'#22222e'}, ticks:{color:'#6b6b80', font:{family:'DM Mono',size:10}, callback:(v,i)=>timeLabels[i]||''} },
+    y: { grid:{color:'#22222e'}, ticks:{color:'#6b6b80', font:{family:'DM Mono',size:10}, callback:v=>'S$'+(Math.abs(v)>=1000?(v/1000).toFixed(0)+'k':Math.round(v))} }
+  }
+};
+
+function updateExplorer() {
+  const budget = +document.getElementById('budget').value;
+  const investPct = +document.getElementById('investPct').value;
+  const returnRate = +document.getElementById('returnRate').value;
+  const loanRate = +document.getElementById('loanRate').value;
+
+  document.getElementById('budgetVal').textContent = fmt(budget);
+  document.getElementById('investPctVal').textContent = investPct+'%';
+  document.getElementById('loanRateVal').textContent = loanRate.toFixed(1)+'%';
+  document.getElementById('returnVal').textContent = returnRate.toFixed(1)+'%';
+
+  const investFrac = investPct/100;
+  const debtAmt = Math.max(100, budget*(1-investFrac));
+  const investAmt = budget*investFrac;
+  document.getElementById('splitDebtBar').style.width = (100-investPct)+'%';
+  document.getElementById('splitInvestBar').style.width = investPct+'%';
+  document.getElementById('debtLabel').textContent = 'Loan: '+fmt(debtAmt);
+  document.getElementById('investLabel').textContent = 'Invest: '+fmt(investAmt);
+
+  const r = simulate(budget, investFrac, returnRate, loanRate);
+  const rD = simulate(budget, 0, returnRate, loanRate);
+  const rI = simulate(budget, 0.9, returnRate, loanRate);
+
+  const payMo = r.payoffMonth||MONTHS;
+  document.getElementById('statPayoff').textContent = payMo<MONTHS?`${(payMo/12).toFixed(1)} yrs`:'>10 yrs';
+  document.getElementById('statPayoffMo').textContent = payMo<MONTHS?`(${payMo} months)`:'loan not cleared';
+  document.getElementById('statInterest').textContent = fmt(r.totalInterest);
+  document.getElementById('statNetworth').textContent = fmt(r.netH[MONTHS]);
+
+  if (mainChart) mainChart.destroy();
+  mainChart = new Chart(document.getElementById('mainChart'), {
+    type:'line', options: baseOpts,
+    data: { labels: timeLabels, datasets: [
+      {label:'Loan balance', data:r.loanH, borderColor:'#ff4d6d', backgroundColor:'rgba(255,77,109,0.07)', fill:true, tension:0.3, pointRadius:0, borderWidth:2},
+      {label:'Portfolio', data:r.portH, borderColor:'#00d4aa', backgroundColor:'rgba(0,212,170,0.07)', fill:true, tension:0.3, pointRadius:0, borderWidth:2},
+      {label:'Net worth', data:r.netH, borderColor:'#ffd166', backgroundColor:'rgba(255,209,102,0.04)', fill:true, tension:0.3, pointRadius:0, borderWidth:2, borderDash:[5,3]}
+    ]}
+  });
+
+  if (compareChart) compareChart.destroy();
+  compareChart = new Chart(document.getElementById('compareChart'), {
+    type:'line', options: baseOpts,
+    data: { labels: timeLabels, datasets: [
+      {label:'Pay debt first', data:rD.netH, borderColor:'#ff4d6d', tension:0.3, pointRadius:0, borderWidth:2, fill:false},
+      {label:'Invest first', data:rI.netH, borderColor:'#00d4aa', tension:0.3, pointRadius:0, borderWidth:2, fill:false},
+      {label:'Your split', data:r.netH, borderColor:'#7c6af7', tension:0.3, pointRadius:0, borderWidth:2.5, fill:false}
+    ]}
+  });
+
+  const spread = returnRate - loanRate;
+  const netEnd = r.netH[MONTHS];
+  const netDebt = rD.netH[MONTHS];
+  const diff = fmt(Math.abs(netEnd-netDebt));
+  const better = netEnd >= netDebt;
+  let v = '';
+  if (spread > 2) {
+    v = `Your return (${returnRate}%) beats the loan rate (${loanRate.toFixed(1)}%) by <span class="good">${spread.toFixed(1)}%</span>. Investing more wins mathematically. Your ${investPct}% invest split gives a 10-year net worth of <strong>${fmt(netEnd)}</strong>, which is <span class="${better?'good':'bad'}">${diff} ${better?'ahead of':'behind'} paying debt first</span>. See the Optimal Split tab to find your personal best allocation.`;
+  } else if (spread > 0) {
+    v = `Your return (${returnRate}%) is only slightly above the loan rate (${loanRate.toFixed(1)}%) — a spread of just ${spread.toFixed(1)}%. After investment fees, this gap may vanish. The difference between strategies over 10 years is only <strong>${diff}</strong>. Paying more toward the loan gives more certainty.`;
+  } else {
+    v = `Your loan rate (${loanRate.toFixed(1)}%) <span class="bad">exceeds your expected return (${returnRate}%)</span>. Every dollar invested earns less than what it costs in interest. Paying off debt first is optimal here — it's a guaranteed ${loanRate.toFixed(1)}% return.`;
+  }
+  document.getElementById('verdictText').innerHTML = v;
+}
+
+function updateOptimal() {
+  const budget = +document.getElementById('budget2').value;
+  const returnRate = +document.getElementById('returnRate2').value;
+  const loanRate = +document.getElementById('loanRate2').value;
+
+  document.getElementById('budgetVal2').textContent = fmt(budget);
+  document.getElementById('returnVal2').textContent = returnRate.toFixed(1)+'%';
+  document.getElementById('loanRateVal2').textContent = loanRate.toFixed(1)+'%';
+
+  const pareto = buildPareto(budget, returnRate, loanRate);
+  const spread = returnRate - loanRate;
+
+  let best = pareto[0];
+  pareto.forEach(p => { if (p.networth > best.networth) best = p; });
+
+  // Pareto scatter
+  const ptColors = pareto.map(p => p.pct===best.pct ? '#ffd166' : p.pct===0 ? '#ff4d6d' : '#7c6af7aa');
+  const ptRadii = pareto.map(p => (p.pct===best.pct||p.pct===0) ? 9 : 5);
+
+  if (paretoChart) paretoChart.destroy();
+  paretoChart = new Chart(document.getElementById('paretoChart'), {
+    type:'scatter',
+    data: { datasets: [{
+      label:'Split',
+      data: pareto.map(p=>({x:p.payoffMonth, y:p.networth, pct:p.pct})),
+      backgroundColor: ptColors,
+      pointRadius: ptRadii,
+      pointHoverRadius: 12,
+    }]},
+    options: {
+      responsive:true, animation:{duration:300},
+      plugins: {
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#13131a', borderColor:'#22222e', borderWidth:1,
+          callbacks: {
+            title: ()=>'',
+            label: ctx => {
+              const d = ctx.raw;
+              return [
+                ` Invest ${d.pct}% / Loan ${100-d.pct}%`,
+                ` Payoff: ${d.x<MONTHS?(d.x/12).toFixed(1)+'yr ('+d.x+'mo)':'>10 yrs'}`,
+                ` Net worth at 10yr: S$${Math.round(d.y).toLocaleString()}`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title:{display:true, text:'← faster payoff  |  loan payoff time (months)  |  slower payoff →', color:'#6b6b80', font:{family:'DM Mono',size:10}},
+          grid:{color:'#22222e'},
+          ticks:{color:'#6b6b80', font:{family:'DM Mono',size:10}, callback:v=>v<MONTHS?v+'mo':'>10yr'}
+        },
+        y: {
+          title:{display:true, text:'10-year net worth →', color:'#6b6b80', font:{family:'DM Mono',size:10}},
+          grid:{color:'#22222e'},
+          ticks:{color:'#6b6b80', font:{family:'DM Mono',size:10}, callback:v=>'S$'+(v/1000).toFixed(0)+'k'}
+        }
+      }
+    }
+  });
+
+  // Bar chart
+  const barColors = pareto.map(p => p.pct===best.pct ? '#ffd166' : p.networth<0 ? '#ff4d6d44' : '#7c6af744');
+  const barBorder = pareto.map(p => p.pct===best.pct ? '#ffd166' : p.networth<0 ? '#ff4d6d' : '#7c6af7');
+
+  if (barChart) barChart.destroy();
+  barChart = new Chart(document.getElementById('barChart'), {
+    type:'bar',
+    data: {
+      labels: pareto.map(p=>p.pct+'%'),
+      datasets:[{
+        label:'Net worth at 10yr',
+        data: pareto.map(p=>p.networth),
+        backgroundColor: barColors,
+        borderColor: barBorder,
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive:true, animation:{duration:300},
+      plugins: {
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#13131a', borderColor:'#22222e', borderWidth:1,
+          callbacks:{ label: ctx=>` Net worth: S$${Math.round(ctx.raw).toLocaleString()}` }
+        }
+      },
+      scales: {
+        x:{grid:{color:'#22222e'}, ticks:{color:'#6b6b80', font:{family:'DM Mono',size:10}}},
+        y:{grid:{color:'#22222e'}, ticks:{color:'#6b6b80', font:{family:'DM Mono',size:10}, callback:v=>'S$'+(v/1000).toFixed(0)+'k'}}
+      }
+    }
+  });
+
+  // Callout
+  const fastPayoff = pareto[0].payoffMonth;
+  const bestPayoff = best.payoffMonth;
+  const gain = fmt(best.networth - pareto[0].networth);
+  const loanAmt = fmt(Math.max(100, budget*(1-best.pct/100)));
+  const invAmt = fmt(budget*best.pct/100);
+
+  document.getElementById('optimalTitle').textContent = spread > 0
+    ? `✦ Optimal split: invest ${best.pct}% / repay ${100-best.pct}%`
+    : '✦ Optimal: pay off loan first';
+
+  document.getElementById('optimalBody').innerHTML = spread > 0
+    ? `At ${fmt(budget)}/mo with a <strong>${spread.toFixed(1)}% return spread</strong>, the math says put <strong class="g">${invAmt}/mo into investments</strong> and <strong class="g">${loanAmt}/mo toward the loan</strong>.<br><br>This maximises your 10-year net worth at <strong>${fmt(best.networth)}</strong> — <span class="g">${gain} more</span> than paying debt only. The loan clears in <strong>${bestPayoff<MONTHS?(bestPayoff/12).toFixed(1)+'yr':'>10yr'}</strong> vs <strong>${fastPayoff?(fastPayoff/12).toFixed(1)+'yr':'>10yr'}</strong> if you paid debt-first.<br><br>Note: when return > loan rate, the model almost always recommends maximising investing (paying minimum $100/mo on loan). The frontier is relatively flat beyond ~60% invest — meaning you gain little extra by going to 90–100% invest, but you take on much more risk of not covering the loan if income drops.`
+    : `Your loan rate (${loanRate.toFixed(1)}%) is higher than your expected return (${returnRate}%). Every dollar invested earns less than it costs you in interest. The math says <strong class="r">pay off the loan first</strong> — it's a guaranteed ${loanRate.toFixed(1)}% risk-free return. Once cleared, redirect everything into investing.`;
+
+  document.getElementById('optimalCallout').className = 'optimal-callout '+(spread>0?'green':'yellow');
+  document.getElementById('optimalTitle').className = spread>0?'green':'yellow';
+}
+
+['budget','investPct','returnRate','loanRate'].forEach(id =>
+  document.getElementById(id).addEventListener('input', updateExplorer));
+['budget2','returnRate2','loanRate2'].forEach(id =>
+  document.getElementById(id).addEventListener('input', updateOptimal));
+
+updateExplorer();
+updateOptimal();
+</script>
+</body>
+</html>
