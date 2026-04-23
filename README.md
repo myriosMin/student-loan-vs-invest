@@ -1,24 +1,37 @@
-# Loan vs Invest Planner
+# Student Loan vs Invest Calculator
 
-A Singapore Polytechnic student loan calculator that lets you explore the optimal split between DBS Tuition Fee Loan repayment and investing.
+A single-page [Next.js](https://nextjs.org) application that helps you compare two financial strategies:
 
-Built with Next.js 14 (App Router), TypeScript, Tailwind CSS, and Chart.js.
+- **Scenario A** — Put extra money toward paying off your student loan early, then invest everything once it's paid off.
+- **Scenario B** — Make minimum loan payments and invest the extra money immediately.
 
-## Getting started
+## Getting Started
+
+Install dependencies:
 
 ```bash
 npm install
+```
+
+Run the development server:
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Deploy to Vercel
-
-Connect the repository to [Vercel](https://vercel.com) — it auto-detects Next.js and deploys with zero configuration.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the calculator.
 
 ## Features
 
-- **Explorer tab** — drag sliders to adjust budget, invest %, and rates; see live loan balance, portfolio, and net-worth charts
-- **Optimal Split tab** — Pareto frontier scatter plot and bar chart showing which invest % maximises 10-year net worth
-- Pure client-side calculations — no backend or database required
+- Enter your loan balance, interest rate, monthly payment, and extra payment amount
+- Set your expected investment return and capital gains tax rate
+- See which strategy wins at 30 years and by how much
+- Year-by-year comparison table (all 30 years or key milestones)
+
+## Deploy on Vercel
+
+The easiest way to deploy this app is with the [Vercel Platform](https://vercel.com/new).
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/myriosMin/student-loan-vs-invest)
+
+Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
