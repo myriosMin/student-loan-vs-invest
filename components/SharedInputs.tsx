@@ -41,6 +41,8 @@ export default function SharedInputs({
 }: Props) {
   const [editingCustom, setEditingCustom] = useState(false);
   const [rawInput, setRawInput] = useState("");
+  const [editingBudget, setEditingBudget] = useState(false);
+  const [rawBudget, setRawBudget] = useState("");
 
   function handlePolyClick() {
     setCustomOn(false);
@@ -67,6 +69,17 @@ export default function SharedInputs({
     const parsed = parseInt(raw, 10);
     if (!isNaN(parsed) && parsed > 0) setCustomVal(parsed);
     setEditingCustom(false);
+  }
+
+  function startBudgetEdit() {
+    setRawBudget(String(budget));
+    setEditingBudget(true);
+  }
+
+  function commitBudgetEdit(raw: string) {
+    const parsed = parseInt(raw, 10);
+    if (!isNaN(parsed) && parsed > 0) setBudget(parsed);
+    setEditingBudget(false);
   }
 
   return (
@@ -140,15 +153,39 @@ export default function SharedInputs({
         )}
       </div>
 
-      <SliderGroup
-        label="Monthly budget"
-        value={fmt(budget)}
-        min={200}
-        max={2000}
-        step={50}
-        current={budget}
-        onChange={setBudget}
-      />
+      <div className="slider-group">
+        <div className="slider-label">
+          <span>Monthly budget</span>
+          {editingBudget ? (
+            <input
+              className="val val-input"
+              type="number"
+              aria-label="Monthly budget"
+              value={rawBudget}
+              onChange={(e) => setRawBudget(e.target.value)}
+              onBlur={(e) => commitBudgetEdit(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditingBudget(false);
+              }}
+              autoFocus
+            />
+          ) : (
+            <button type="button" className="val val-editable" onClick={startBudgetEdit}>
+              {fmt(budget)}
+            </button>
+          )}
+        </div>
+        <input
+          type="range"
+          aria-label="Monthly budget slider"
+          min={200}
+          max={2000}
+          step={50}
+          value={Math.min(Math.max(budget, 200), 2000)}
+          onChange={(e) => setBudget(Number(e.target.value))}
+        />
+      </div>
 
       <div className="rate-row">
         <SliderGroup
