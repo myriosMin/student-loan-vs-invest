@@ -11,7 +11,13 @@ interface ChartWrapperProps {
   children: React.ReactNode;
 }
 
-export default function ChartWrapper({ title, subtitle, legend, note, children }: ChartWrapperProps) {
+export default function ChartWrapper({
+  title,
+  subtitle,
+  legend,
+  note,
+  children,
+}: ChartWrapperProps) {
   return (
     <div className="chart-wrap">
       <div className="chart-title">{title}</div>

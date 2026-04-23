@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { Scatter, Bar } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
-import '../lib/chartSetup';
-import { buildPareto, fmt, MONTHS } from '../lib/calculator';
-import ChartWrapper from './ChartWrapper';
+import { useMemo } from "react";
+import { Scatter, Bar } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
+import "../lib/chartSetup";
+import { buildPareto, fmt, MONTHS } from "../lib/calculator";
+import ChartWrapper from "./ChartWrapper";
 
 const C = {
-  grid: '#e8d5b7',
-  ticks: '#9a7f5a',
-  tooltipBg: '#fff8f0',
-  tooltipBorder: '#e8d5b7',
-  tooltipTitle: '#2d2418',
-  tooltipBody: '#9a7f5a',
+  grid: "#e8d5b7",
+  ticks: "#9a7f5a",
+  tooltipBg: "#fff8f0",
+  tooltipBorder: "#e8d5b7",
+  tooltipTitle: "#2d2418",
+  tooltipBody: "#9a7f5a",
 };
 
 type Props = {
@@ -23,15 +23,14 @@ type Props = {
 };
 
 export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
-
   const pareto = useMemo(
     () => buildPareto(budget, returnRate, loanRate),
-    [budget, returnRate, loanRate]
+    [budget, returnRate, loanRate],
   );
 
   const best = useMemo(
     () => pareto.reduce((b, p) => (p.networth > b.networth ? p : b), pareto[0]),
-    [pareto]
+    [pareto],
   );
 
   const spread = returnRate - loanRate;
@@ -45,13 +44,13 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
 
   const calloutTitle = isPositive
     ? `✦ Optimal split: invest ${best.pct}% / repay ${100 - best.pct}%`
-    : '✦ Optimal: pay off loan first';
+    : "✦ Optimal: pay off loan first";
 
   const calloutBody = isPositive
-    ? `At ${fmt(budget)}/mo with a <strong>${spread.toFixed(1)}% return spread</strong>, the math says put <strong class="g">${invAmt}/mo into investments</strong> and <strong class="g">${loanAmt}/mo toward the loan</strong>.<br><br>This maximises your 10-year net worth at <strong>${fmt(best.networth)}</strong> — <span class="g">${gain} more</span> than paying debt only. The loan clears in <strong>${bestPayoff < MONTHS ? (bestPayoff / 12).toFixed(1) + 'yr' : '>10yr'}</strong> vs <strong>${fastPayoff ? (fastPayoff / 12).toFixed(1) + 'yr' : '>10yr'}</strong> if you paid debt-first.<br><br>Note: when return > loan rate, the model almost always recommends maximising investing (paying minimum $100/mo on loan). The frontier is relatively flat beyond ~60% invest — meaning you gain little extra by going to 90–100% invest, but you take on much more risk of not covering the loan if income drops.`
+    ? `At ${fmt(budget)}/mo with a <strong>${spread.toFixed(1)}% return spread</strong>, the math says put <strong class="g">${invAmt}/mo into investments</strong> and <strong class="g">${loanAmt}/mo toward the loan</strong>.<br><br>This maximises your 10-year net worth at <strong>${fmt(best.networth)}</strong> — <span class="g">${gain} more</span> than paying debt only. The loan clears in <strong>${bestPayoff < MONTHS ? (bestPayoff / 12).toFixed(1) + "yr" : ">10yr"}</strong> vs <strong>${fastPayoff ? (fastPayoff / 12).toFixed(1) + "yr" : ">10yr"}</strong> if you paid debt-first.<br><br>Note: when return > loan rate, the model almost always recommends maximising investing (paying minimum $100/mo on loan). The frontier is relatively flat beyond ~60% invest — meaning you gain little extra by going to 90–100% invest, but you take on much more risk of not covering the loan if income drops.`
     : `Your loan rate (${loanRate.toFixed(1)}%) is higher than your expected return (${returnRate}%). Every dollar invested earns less than it costs you in interest. The math says <strong class="r">pay off the loan first</strong> — it's a guaranteed ${loanRate.toFixed(1)}% risk-free return. Once cleared, redirect everything into investing.`;
 
-  const scatterOpts = useMemo<ChartOptions<'scatter'>>(
+  const scatterOpts = useMemo<ChartOptions<"scatter">>(
     () => ({
       responsive: true,
       animation: { duration: 300 },
@@ -64,15 +63,18 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
           titleColor: C.tooltipTitle,
           bodyColor: C.tooltipBody,
           callbacks: {
-            title: () => '',
+            title: () => "",
             label: (ctx) => {
               const p = pareto[ctx.dataIndex];
               return [
                 ` Invest ${p.pct}% / Loan ${100 - p.pct}%`,
                 ` Payoff: ${
                   p.payoffMonth < MONTHS
-                    ? (p.payoffMonth / 12).toFixed(1) + 'yr (' + p.payoffMonth + 'mo)'
-                    : '>10 yrs'
+                    ? (p.payoffMonth / 12).toFixed(1) +
+                      "yr (" +
+                      p.payoffMonth +
+                      "mo)"
+                    : ">10 yrs"
                 }`,
                 ` Net worth at 10yr: S$${Math.round(p.networth).toLocaleString()}`,
               ];
@@ -84,37 +86,37 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
         x: {
           title: {
             display: true,
-            text: '← faster payoff  |  loan payoff time (months)  |  slower payoff →',
+            text: "← faster payoff  |  loan payoff time (months)  |  slower payoff →",
             color: C.ticks,
-            font: { family: 'DM Mono', size: 10 },
+            font: { family: "DM Mono", size: 10 },
           },
           grid: { color: C.grid },
           ticks: {
             color: C.ticks,
-            font: { family: 'DM Mono', size: 10 },
-            callback: (v) => ((v as number) < MONTHS ? v + 'mo' : '>10yr'),
+            font: { family: "DM Mono", size: 10 },
+            callback: (v) => ((v as number) < MONTHS ? v + "mo" : ">10yr"),
           },
         },
         y: {
           title: {
             display: true,
-            text: '10-year net worth →',
+            text: "10-year net worth →",
             color: C.ticks,
-            font: { family: 'DM Mono', size: 10 },
+            font: { family: "DM Mono", size: 10 },
           },
           grid: { color: C.grid },
           ticks: {
             color: C.ticks,
-            font: { family: 'DM Mono', size: 10 },
-            callback: (v) => 'S$' + ((v as number) / 1000).toFixed(0) + 'k',
+            font: { family: "DM Mono", size: 10 },
+            callback: (v) => "S$" + ((v as number) / 1000).toFixed(0) + "k",
           },
         },
       },
     }),
-    [pareto]
+    [pareto],
   );
 
-  const barOpts = useMemo<ChartOptions<'bar'>>(
+  const barOpts = useMemo<ChartOptions<"bar">>(
     () => ({
       responsive: true,
       animation: { duration: 300 },
@@ -135,31 +137,35 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
       scales: {
         x: {
           grid: { color: C.grid },
-          ticks: { color: C.ticks, font: { family: 'DM Mono', size: 10 } },
+          ticks: { color: C.ticks, font: { family: "DM Mono", size: 10 } },
         },
         y: {
           grid: { color: C.grid },
           ticks: {
             color: C.ticks,
-            font: { family: 'DM Mono', size: 10 },
-            callback: (v) => 'S$' + ((v as number) / 1000).toFixed(0) + 'k',
+            font: { family: "DM Mono", size: 10 },
+            callback: (v) => "S$" + ((v as number) / 1000).toFixed(0) + "k",
           },
         },
       },
     }),
-    []
+    [],
   );
 
   const scatterData = {
     datasets: [
       {
-        label: 'Split',
+        label: "Split",
         data: pareto.map((p) => ({ x: p.payoffMonth, y: p.networth })),
         backgroundColor: pareto.map((p) =>
-          p.pct === best.pct ? '#d4870a' : p.pct === 0 ? '#e05252' : '#7c6af7aa'
+          p.pct === best.pct
+            ? "#d4870a"
+            : p.pct === 0
+              ? "#e05252"
+              : "#7c6af7aa",
         ),
         pointRadius: pareto.map((p) =>
-          p.pct === best.pct || p.pct === 0 ? 9 : 5
+          p.pct === best.pct || p.pct === 0 ? 9 : 5,
         ),
         pointHoverRadius: 12,
       },
@@ -170,13 +176,21 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
     labels: pareto.map((p) => `${p.pct}%`),
     datasets: [
       {
-        label: 'Net worth at 10yr',
+        label: "Net worth at 10yr",
         data: pareto.map((p) => p.networth),
         backgroundColor: pareto.map((p) =>
-          p.pct === best.pct ? '#d4870a' : p.networth < 0 ? '#e0525244' : '#7c6af744'
+          p.pct === best.pct
+            ? "#d4870a"
+            : p.networth < 0
+              ? "#e0525244"
+              : "#7c6af744",
         ),
         borderColor: pareto.map((p) =>
-          p.pct === best.pct ? '#d4870a' : p.networth < 0 ? '#e05252' : '#7c6af7'
+          p.pct === best.pct
+            ? "#d4870a"
+            : p.networth < 0
+              ? "#e05252"
+              : "#7c6af7",
         ),
         borderWidth: 1.5,
         borderRadius: 4,
@@ -186,8 +200,8 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
 
   return (
     <>
-      <div className={`optimal-callout ${isPositive ? 'green' : 'yellow'}`}>
-        <h3 className={isPositive ? 'green' : 'yellow'}>{calloutTitle}</h3>
+      <div className={`optimal-callout ${isPositive ? "green" : "yellow"}`}>
+        <h3 className={isPositive ? "green" : "yellow"}>{calloutTitle}</h3>
         <p dangerouslySetInnerHTML={{ __html: calloutBody }} />
       </div>
 
@@ -196,7 +210,11 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
         subtitle="Every dot is a different invest% split. Moving right = slower payoff. Moving up = higher net worth. The frontier shows exactly what you trade off between wealth and speed."
         note="★ gold = mathematically optimal (max net worth) · red = debt-first (fastest payoff) · each dot = 5% increment"
       >
-        <Scatter data={scatterData as never} options={scatterOpts} height={300} />
+        <Scatter
+          data={scatterData as never}
+          options={scatterOpts}
+          height={300}
+        />
       </ChartWrapper>
 
       <ChartWrapper
@@ -207,25 +225,28 @@ export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
       </ChartWrapper>
 
       <div className="optimal-callout yellow">
-        <h3 className="yellow">⚠️ Real-world caveats</h3>
+        <h3 className="yellow"> &gt; Real-world caveats !!!</h3>
         <p>
-          <span className="r">① Investment returns aren&apos;t guaranteed.</span> 7% is a
-          long-run average — in any 3-year stretch you could be down 30% while the loan keeps
-          accruing.
+          <span className="r">
+            ① Investment returns aren&apos;t guaranteed.
+          </span>{" "}
+          7% is a long-run average — in any 3-year stretch you could be down 30%
+          while the loan keeps accruing.
           <br />
           <br />
-          <span className="r">② Psychological debt stress matters.</span> Being debt-free has
-          non-financial value — it gives you more job flexibility and peace of mind.
+          <span className="r">② Psychological debt stress matters.</span> Being
+          debt-free has non-financial value — it gives you more job flexibility
+          and peace of mind.
           <br />
           <br />
-          <span className="g">③ Time in market is powerful.</span> Starting to invest S$100/mo
-          early beats waiting until the loan clears — the first years of compounding are the most
-          valuable.
+          <span className="g">③ Time in market is powerful.</span> Starting to
+          invest S$100/mo early beats waiting until the loan clears — the first
+          years of compounding are the most valuable.
           <br />
           <br />
-          <strong>Practical recommendation:</strong> Pay minimum ($100/mo) on the loan, build a
-          3-month emergency fund first, then invest the rest. Don&apos;t go 100% invest unless you
-          have very stable income.
+          <strong>Practical recommendation:</strong> Pay minimum ($100/mo) on
+          the loan, build a 3-month emergency fund first, then invest the rest.
+          Don&apos;t go 100% invest unless you have very stable income.
         </p>
       </div>
     </>

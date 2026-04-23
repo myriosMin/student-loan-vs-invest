@@ -1,48 +1,51 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Line } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
-import '../lib/chartSetup';
-import { simulate, fmt, TIME_LABELS, MONTHS } from '../lib/calculator';
-import StatCard from './StatCard';
-import ChartWrapper from './ChartWrapper';
+import { useState, useMemo } from "react";
+import { Line } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
+import "../lib/chartSetup";
+import { simulate, fmt, TIME_LABELS, MONTHS } from "../lib/calculator";
+import StatCard from "./StatCard";
+import ChartWrapper from "./ChartWrapper";
 
 const C = {
-  grid: '#e8d5b7',
-  ticks: '#9a7f5a',
-  tooltipBg: '#fff8f0',
-  tooltipBorder: '#e8d5b7',
-  tooltipTitle: '#2d2418',
-  tooltipBody: '#9a7f5a',
+  grid: "#e8d5b7",
+  ticks: "#9a7f5a",
+  tooltipBg: "#fff8f0",
+  tooltipBorder: "#e8d5b7",
+  tooltipTitle: "#2d2418",
+  tooltipBody: "#9a7f5a",
 };
 
-const baseScales: ChartOptions<'line'>['scales'] = {
+const baseScales: ChartOptions<"line">["scales"] = {
   x: {
     grid: { color: C.grid },
     ticks: {
       color: C.ticks,
-      font: { family: 'DM Mono', size: 10 },
-      callback: (_v: unknown, i: number) => TIME_LABELS[i] || '',
+      font: { family: "DM Mono", size: 10 },
+      callback: (_v: unknown, i: number) => TIME_LABELS[i] || "",
     },
   },
   y: {
     grid: { color: C.grid },
     ticks: {
       color: C.ticks,
-      font: { family: 'DM Mono', size: 10 },
+      font: { family: "DM Mono", size: 10 },
       callback: (v) => {
         const n = v as number;
-        return 'S$' + (Math.abs(n) >= 1000 ? (n / 1000).toFixed(0) + 'k' : Math.round(n));
+        return (
+          "S$" +
+          (Math.abs(n) >= 1000 ? (n / 1000).toFixed(0) + "k" : Math.round(n))
+        );
       },
     },
   },
 };
 
-const lineOpts: ChartOptions<'line'> = {
+const lineOpts: ChartOptions<"line"> = {
   responsive: true,
   animation: { duration: 250 },
-  interaction: { mode: 'index', intersect: false },
+  interaction: { mode: "index", intersect: false },
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -75,15 +78,15 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
 
   const r = useMemo(
     () => simulate(budget, investFrac, returnRate, loanRate),
-    [budget, investFrac, returnRate, loanRate]
+    [budget, investFrac, returnRate, loanRate],
   );
   const rD = useMemo(
     () => simulate(budget, 0, returnRate, loanRate),
-    [budget, returnRate, loanRate]
+    [budget, returnRate, loanRate],
   );
   const rI = useMemo(
     () => simulate(budget, 0.9, returnRate, loanRate),
-    [budget, returnRate, loanRate]
+    [budget, returnRate, loanRate],
   );
 
   const payMo = r.payoffMonth ?? MONTHS;
@@ -93,9 +96,9 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
   const diff = fmt(Math.abs(netEnd - netDebt));
   const better = netEnd >= netDebt;
 
-  let verdictHtml = '';
+  let verdictHtml = "";
   if (spread > 2) {
-    verdictHtml = `Your return (${returnRate}%) beats the loan rate (${loanRate.toFixed(1)}%) by <span class="good">${spread.toFixed(1)}%</span>. Investing more wins mathematically. Your ${investPct}% invest split gives a 10-year net worth of <strong>${fmt(netEnd)}</strong>, which is <span class="${better ? 'good' : 'bad'}">${diff} ${better ? 'ahead of' : 'behind'} paying debt first</span>. See the Optimal Split tab to find your personal best allocation.`;
+    verdictHtml = `Your return (${returnRate}%) beats the loan rate (${loanRate.toFixed(1)}%) by <span class="good">${spread.toFixed(1)}%</span>. Investing more wins mathematically. Your ${investPct}% invest split gives a 10-year net worth of <strong>${fmt(netEnd)}</strong>, which is <span class="${better ? "good" : "bad"}">${diff} ${better ? "ahead of" : "behind"} paying debt first</span>. See the Optimal Split tab to find your personal best allocation.`;
   } else if (spread > 0) {
     verdictHtml = `Your return (${returnRate}%) is only slightly above the loan rate (${loanRate.toFixed(1)}%) — a spread of just ${spread.toFixed(1)}%. After investment fees, this gap may vanish. The difference between strategies over 10 years is only <strong>${diff}</strong>. Paying more toward the loan gives more certainty.`;
   } else {
@@ -106,30 +109,30 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
     labels: TIME_LABELS,
     datasets: [
       {
-        label: 'Loan balance',
+        label: "Loan balance",
         data: r.loanH,
-        borderColor: '#e05252',
-        backgroundColor: 'rgba(224,82,82,0.07)',
+        borderColor: "#e05252",
+        backgroundColor: "rgba(224,82,82,0.07)",
         fill: true,
         tension: 0.3,
         pointRadius: 0,
         borderWidth: 2,
       },
       {
-        label: 'Portfolio',
+        label: "Portfolio",
         data: r.portH,
-        borderColor: '#2d9c6e',
-        backgroundColor: 'rgba(45,156,110,0.07)',
+        borderColor: "#2d9c6e",
+        backgroundColor: "rgba(45,156,110,0.07)",
         fill: true,
         tension: 0.3,
         pointRadius: 0,
         borderWidth: 2,
       },
       {
-        label: 'Net worth',
+        label: "Net worth",
         data: r.netH,
-        borderColor: '#d4870a',
-        backgroundColor: 'rgba(212,135,10,0.04)',
+        borderColor: "#d4870a",
+        backgroundColor: "rgba(212,135,10,0.04)",
         fill: true,
         tension: 0.3,
         pointRadius: 0,
@@ -143,27 +146,27 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
     labels: TIME_LABELS,
     datasets: [
       {
-        label: 'Pay debt first',
+        label: "Pay debt first",
         data: rD.netH,
-        borderColor: '#e05252',
+        borderColor: "#e05252",
         tension: 0.3,
         pointRadius: 0,
         borderWidth: 2,
         fill: false,
       },
       {
-        label: 'Invest first (min loan)',
+        label: "Invest first (min loan)",
         data: rI.netH,
-        borderColor: '#2d9c6e',
+        borderColor: "#2d9c6e",
         tension: 0.3,
         pointRadius: 0,
         borderWidth: 2,
         fill: false,
       },
       {
-        label: 'Your split',
+        label: "Your split",
         data: r.netH,
-        borderColor: '#7c6af7',
+        borderColor: "#7c6af7",
         tension: 0.3,
         pointRadius: 0,
         borderWidth: 2.5,
@@ -192,7 +195,10 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
             onChange={(e) => setInvestPct(Number(e.target.value))}
           />
           <div className="split-viz">
-            <div className="split-debt" style={{ width: `${100 - investPct}%` }} />
+            <div
+              className="split-debt"
+              style={{ width: `${100 - investPct}%` }}
+            />
             <div className="split-invest" style={{ width: `${investPct}%` }} />
           </div>
           <div className="split-labels">
@@ -205,8 +211,8 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
       <div className="stats-grid">
         <StatCard
           label="Loan paid off"
-          value={payMo < MONTHS ? `${(payMo / 12).toFixed(1)} yrs` : '>10 yrs'}
-          sub={payMo < MONTHS ? `(${payMo} months)` : 'loan not cleared'}
+          value={payMo < MONTHS ? `${(payMo / 12).toFixed(1)} yrs` : ">10 yrs"}
+          sub={payMo < MONTHS ? `(${payMo} months)` : "loan not cleared"}
           valueClass="debt-val"
         />
         <StatCard
@@ -226,9 +232,9 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
       <ChartWrapper
         title="Loan balance & portfolio over time"
         legend={[
-          { color: '#e05252', label: 'Loan balance' },
-          { color: '#2d9c6e', label: 'Portfolio' },
-          { color: '#d4870a', label: 'Net worth' },
+          { color: "#e05252", label: "Loan balance" },
+          { color: "#2d9c6e", label: "Portfolio" },
+          { color: "#d4870a", label: "Net worth" },
         ]}
       >
         <Line data={mainData as never} options={lineOpts} />
@@ -237,9 +243,9 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
       <ChartWrapper
         title="Strategy comparison — net worth over time"
         legend={[
-          { color: '#e05252', label: 'Pay debt first' },
-          { color: '#2d9c6e', label: 'Invest first (min loan)' },
-          { color: '#7c6af7', label: 'Your split' },
+          { color: "#e05252", label: "Pay debt first" },
+          { color: "#2d9c6e", label: "Invest first (min loan)" },
+          { color: "#7c6af7", label: "Your split" },
         ]}
       >
         <Line data={compareData as never} options={lineOpts} />

@@ -70,13 +70,25 @@ export default function LoanCalculator() {
       </div>
 
       <div className="panels-wrapper">
-        <div className={`panel panel-explorer${activeTab === "explorer" ? " active" : ""}`}>
-          <ExplorerTab budget={budget} returnRate={returnRate} loanRate={loanRate} />
+        <div
+          className={`panel panel-explorer${activeTab === "explorer" ? " active" : ""}`}
+        >
+          <ExplorerTab
+            budget={budget}
+            returnRate={returnRate}
+            loanRate={loanRate}
+          />
         </div>
 
-        <div className={`panel panel-optimal${activeTab === "optimal" ? " active" : ""}`}>
+        <div
+          className={`panel panel-optimal${activeTab === "optimal" ? " active" : ""}`}
+        >
           {optimalMounted && (
-            <OptimalTab budget={budget} returnRate={returnRate} loanRate={loanRate} />
+            <OptimalTab
+              budget={budget}
+              returnRate={returnRate}
+              loanRate={loanRate}
+            />
           )}
         </div>
       </div>

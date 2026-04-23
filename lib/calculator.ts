@@ -20,7 +20,7 @@ export function simulate(
   budget: number,
   investFrac: number,
   annualReturn: number,
-  annualLoanRate: number
+  annualLoanRate: number,
 ): SimulateResult {
   const mr = Math.pow(1 + annualReturn / 100, 1 / 12) - 1;
   const mlr = annualLoanRate / 100 / 12;
@@ -67,7 +67,7 @@ export function simulate(
 export function buildPareto(
   budget: number,
   returnRate: number,
-  loanRate: number
+  loanRate: number,
 ): ParetoPoint[] {
   const pts: ParetoPoint[] = [];
   for (let pct = 0; pct <= 100; pct += 5) {
@@ -83,9 +83,9 @@ export function buildPareto(
 }
 
 export function fmt(n: number): string {
-  return 'S$' + Math.round(n).toLocaleString();
+  return "S$" + Math.round(n).toLocaleString();
 }
 
 export const TIME_LABELS = Array.from({ length: MONTHS + 1 }, (_, i) =>
-  i === 0 ? 'Now' : i % 12 === 0 ? `Yr ${i / 12}` : ''
+  i === 0 ? "Now" : i % 12 === 0 ? `Yr ${i / 12}` : "",
 );

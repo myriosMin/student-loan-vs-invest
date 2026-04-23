@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface SliderGroupProps {
   label: string;
@@ -24,14 +24,17 @@ export default function SliderGroup({
   investSlider,
 }: SliderGroupProps) {
   return (
-    <div className="slider-group" style={noMargin ? { marginBottom: 0 } : undefined}>
+    <div
+      className="slider-group"
+      style={noMargin ? { marginBottom: 0 } : undefined}
+    >
       <div className="slider-label">
         <span>{label}</span>
         <span className="val">{value}</span>
       </div>
       <input
         type="range"
-        className={investSlider ? 'invest-slider' : undefined}
+        className={investSlider ? "invest-slider" : undefined}
         min={min}
         max={max}
         step={step}

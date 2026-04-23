@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { fmt } from '../lib/calculator';
-import SliderGroup from './SliderGroup';
+import { fmt } from "../lib/calculator";
+import SliderGroup from "./SliderGroup";
 
 type Props = {
   budget: number;

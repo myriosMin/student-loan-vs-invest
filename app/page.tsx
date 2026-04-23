@@ -1,4 +1,4 @@
-import LoanCalculator from '@/components/LoanCalculator';
+import LoanCalculator from "@/components/LoanCalculator";
 
 export default function Home() {
   return <LoanCalculator />;
