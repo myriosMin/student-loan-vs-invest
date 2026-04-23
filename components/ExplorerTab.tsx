@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import type { ChartOptions } from "chart.js";
 import "../lib/chartSetup";
-import { simulate, fmt, TIME_LABELS, MONTHS } from "../lib/calculator";
+import { simulate, fmt, makeTimeLabels } from "../lib/calculator";
 import StatCard from "./StatCard";
 import ChartWrapper from "./ChartWrapper";
 
@@ -23,7 +23,8 @@ const baseScales: ChartOptions<"line">["scales"] = {
     ticks: {
       color: C.ticks,
       font: { family: "DM Mono", size: 10 },
-      callback: (_v: unknown, i: number) => TIME_LABELS[i] || "",
+      callback: (_v: unknown, i: number) =>
+        i === 0 ? "Now" : i % 12 === 0 ? `Yr ${i / 12}` : "",
     },
   },
   y: {
@@ -68,32 +69,35 @@ type Props = {
   returnRate: number;
   loanRate: number;
   loanAmount: number;
+  horizon: number;
 };
 
-export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }: Props) {
+export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount, horizon }: Props) {
   const [investPct, setInvestPct] = useState(30);
 
   const investFrac = investPct / 100;
   const debtAmt = Math.max(100, budget * (1 - investFrac));
   const investAmt = budget * investFrac;
+  const yrLabel = horizon / 12;
+  const timeLabels = useMemo(() => makeTimeLabels(horizon), [horizon]);
 
   const r = useMemo(
-    () => simulate(budget, investFrac, returnRate, loanRate, loanAmount),
-    [budget, investFrac, returnRate, loanRate, loanAmount],
+    () => simulate(budget, investFrac, returnRate, loanRate, loanAmount, horizon),
+    [budget, investFrac, returnRate, loanRate, loanAmount, horizon],
   );
   const rD = useMemo(
-    () => simulate(budget, 0, returnRate, loanRate, loanAmount),
-    [budget, returnRate, loanRate, loanAmount],
+    () => simulate(budget, 0, returnRate, loanRate, loanAmount, horizon),
+    [budget, returnRate, loanRate, loanAmount, horizon],
   );
   const rI = useMemo(
-    () => simulate(budget, 0.9, returnRate, loanRate, loanAmount),
-    [budget, returnRate, loanRate, loanAmount],
+    () => simulate(budget, 0.9, returnRate, loanRate, loanAmount, horizon),
+    [budget, returnRate, loanRate, loanAmount, horizon],
   );
 
-  const payMo = r.payoffMonth ?? MONTHS;
+  const payMo = r.payoffMonth ?? horizon;
   const spread = returnRate - loanRate;
-  const netEnd = r.netH[MONTHS];
-  const netDebt = rD.netH[MONTHS];
+  const netEnd = r.netH[horizon];
+  const netDebt = rD.netH[horizon];
   const diff = fmt(Math.abs(netEnd - netDebt));
   const better = netEnd >= netDebt;
   const netVsDebt = netEnd - netDebt;
@@ -104,15 +108,15 @@ export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }
 
   let verdictHtml = "";
   if (spread > 2) {
-    verdictHtml = `Your return (${returnRate}%) beats the loan rate (${loanRate.toFixed(1)}%) by <span class="good">${spread.toFixed(1)}%</span>. Investing more wins mathematically. Your ${investPct}% invest split gives a 10-year net worth of <strong>${fmt(netEnd)}</strong>, which is <span class="${better ? "good" : "bad"}">${diff} ${better ? "ahead of" : "behind"} paying debt first</span>. See the Optimal Split tab to find your personal best allocation.`;
+    verdictHtml = `Your return (${returnRate}%) beats the loan rate (${loanRate.toFixed(1)}%) by <span class="good">${spread.toFixed(1)}%</span>. Investing more wins mathematically. Your ${investPct}% invest split gives a ${yrLabel}-year net worth of <strong>${fmt(netEnd)}</strong>, which is <span class="${better ? "good" : "bad"}">${diff} ${better ? "ahead of" : "behind"} paying debt first</span>. See the Optimal Split tab to find your personal best allocation.`;
   } else if (spread > 0) {
-    verdictHtml = `Your return (${returnRate}%) is only slightly above the loan rate (${loanRate.toFixed(1)}%) — a spread of just ${spread.toFixed(1)}%. After investment fees, this gap may vanish. The difference between strategies over 10 years is only <strong>${diff}</strong>. Paying more toward the loan gives more certainty.`;
+    verdictHtml = `Your return (${returnRate}%) is only slightly above the loan rate (${loanRate.toFixed(1)}%) — a spread of just ${spread.toFixed(1)}%. After investment fees, this gap may vanish. The difference between strategies over ${yrLabel} years is only <strong>${diff}</strong>. Paying more toward the loan gives more certainty.`;
   } else {
     verdictHtml = `Your loan rate (${loanRate.toFixed(1)}%) <span class="bad">exceeds your expected return (${returnRate}%)</span>. Every dollar invested earns less than what it costs in interest. Paying off debt first is optimal here — it's a guaranteed ${loanRate.toFixed(1)}% return.`;
   }
 
   const mainData = {
-    labels: TIME_LABELS,
+    labels: timeLabels,
     datasets: [
       {
         label: "Loan balance",
@@ -149,7 +153,7 @@ export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }
   };
 
   const compareData = {
-    labels: TIME_LABELS,
+    labels: timeLabels,
     datasets: [
       {
         label: "Pay debt first",
@@ -217,8 +221,8 @@ export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }
       <div className="stats-grid">
         <StatCard
           label="Loan paid off"
-          value={payMo < MONTHS ? `${(payMo / 12).toFixed(1)} yrs` : ">10 yrs"}
-          sub={payMo < MONTHS ? `(${payMo} months)` : "loan not cleared"}
+          value={payMo < horizon ? `${(payMo / 12).toFixed(1)} yrs` : `>${yrLabel} yrs`}
+          sub={payMo < horizon ? `(${payMo} months)` : "loan not cleared"}
           valueClass="debt-val"
         />
         <StatCard
@@ -228,13 +232,13 @@ export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }
           valueClass="debt-val"
         />
         <StatCard
-          label="Net worth at 10yr"
-          value={fmt(r.netH[MONTHS])}
+          label={`Net worth at ${yrLabel}yr`}
+          value={fmt(r.netH[horizon])}
           sub="portfolio − remaining loan"
           valueClass="invest-val"
         />
         <StatCard
-          label="vs Debt-first at 10yr"
+          label={`vs Debt-first at ${yrLabel}yr`}
           value={diffSigned}
           sub={netVsDebt >= 0 ? "your split wins" : "debt-first wins"}
           valueClass={netVsDebt >= 0 ? "invest-val" : "debt-val"}

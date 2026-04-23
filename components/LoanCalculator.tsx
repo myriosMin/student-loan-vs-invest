@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { MONTHS, MONTHS_UNI } from "../lib/calculator";
 import ExplorerTab from "./ExplorerTab";
 import OptimalTab from "./OptimalTab";
 import SharedInputs from "./SharedInputs";
@@ -53,6 +54,8 @@ export default function LoanCalculator() {
     if (customOn) return customVal;
     return (polyOn ? 24000 : 0) + (uniOn ? 32000 : 0);
   }, [customOn, customVal, polyOn, uniOn]);
+
+  const horizon = uniOn ? MONTHS_UNI : MONTHS;
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
@@ -128,6 +131,7 @@ export default function LoanCalculator() {
             returnRate={returnRate}
             loanRate={effectiveLoanRate}
             loanAmount={loanAmount}
+            horizon={horizon}
           />
         </div>
 
@@ -140,6 +144,7 @@ export default function LoanCalculator() {
               returnRate={returnRate}
               loanRate={effectiveLoanRate}
               loanAmount={loanAmount}
+              horizon={horizon}
             />
           )}
         </div>

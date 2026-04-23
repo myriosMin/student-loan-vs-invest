@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Scatter, Bar } from "react-chartjs-2";
 import type { ChartOptions } from "chart.js";
 import "../lib/chartSetup";
-import { buildPareto, fmt, MONTHS } from "../lib/calculator";
+import { buildPareto, fmt } from "../lib/calculator";
 import ChartWrapper from "./ChartWrapper";
 
 const C = {
@@ -21,12 +21,15 @@ type Props = {
   returnRate: number;
   loanRate: number;
   loanAmount: number;
+  horizon: number;
 };
 
-export default function OptimalTab({ budget, returnRate, loanRate, loanAmount }: Props) {
+export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, horizon }: Props) {
+  const yrLabel = horizon / 12;
+
   const pareto = useMemo(
-    () => buildPareto(budget, returnRate, loanRate, loanAmount),
-    [budget, returnRate, loanRate, loanAmount],
+    () => buildPareto(budget, returnRate, loanRate, loanAmount, horizon),
+    [budget, returnRate, loanRate, loanAmount, horizon],
   );
 
   const best = useMemo(
@@ -48,7 +51,7 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount }:
     : "✦ Optimal: pay off loan first";
 
   const calloutBody = isPositive
-    ? `At ${fmt(budget)}/mo with a <strong>${spread.toFixed(1)}% return spread</strong>, the math says put <strong class="g">${invAmt}/mo into investments</strong> and <strong class="g">${loanAmt}/mo toward the loan</strong>.<br><br>This maximises your 10-year net worth at <strong>${fmt(best.networth)}</strong> — <span class="g">${gain} more</span> than paying debt only. The loan clears in <strong>${bestPayoff < MONTHS ? (bestPayoff / 12).toFixed(1) + "yr" : ">10yr"}</strong> vs <strong>${fastPayoff ? (fastPayoff / 12).toFixed(1) + "yr" : ">10yr"}</strong> if you paid debt-first.<br><br>Note: when return > loan rate, the model almost always recommends maximising investing (paying minimum $100/mo on loan). The frontier is relatively flat beyond ~60% invest — meaning you gain little extra by going to 90–100% invest, but you take on much more risk of not covering the loan if income drops.`
+    ? `At ${fmt(budget)}/mo with a <strong>${spread.toFixed(1)}% return spread</strong>, the math says put <strong class="g">${invAmt}/mo into investments</strong> and <strong class="g">${loanAmt}/mo toward the loan</strong>.<br><br>This maximises your ${yrLabel}-year net worth at <strong>${fmt(best.networth)}</strong> — <span class="g">${gain} more</span> than paying debt only. The loan clears in <strong>${bestPayoff < horizon ? (bestPayoff / 12).toFixed(1) + "yr" : ">" + yrLabel + "yr"}</strong> vs <strong>${fastPayoff ? (fastPayoff / 12).toFixed(1) + "yr" : ">" + yrLabel + "yr"}</strong> if you paid debt-first.<br><br>Note: when return > loan rate, the model almost always recommends maximising investing (paying minimum $100/mo on loan). The frontier is relatively flat beyond ~60% invest — meaning you gain little extra by going to 90–100% invest, but you take on much more risk of not covering the loan if income drops.`
     : `Your loan rate (${loanRate.toFixed(1)}%) is higher than your expected return (${returnRate}%). Every dollar invested earns less than it costs you in interest. The math says <strong class="r">pay off the loan first</strong> — it's a guaranteed ${loanRate.toFixed(1)}% risk-free return. Once cleared, redirect everything into investing.`;
 
   const scatterOpts = useMemo<ChartOptions<"scatter">>(
@@ -70,14 +73,14 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount }:
               return [
                 ` Invest ${p.pct}% / Loan ${100 - p.pct}%`,
                 ` Payoff: ${
-                  p.payoffMonth < MONTHS
+                  p.payoffMonth < horizon
                     ? (p.payoffMonth / 12).toFixed(1) +
                       "yr (" +
                       p.payoffMonth +
                       "mo)"
-                    : ">10 yrs"
+                    : ">" + yrLabel + " yrs"
                 }`,
-                ` Net worth at 10yr: S$${Math.round(p.networth).toLocaleString()}`,
+                ` Net worth at ${yrLabel}yr: S$${Math.round(p.networth).toLocaleString()}`,
               ];
             },
           },
@@ -95,13 +98,13 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount }:
           ticks: {
             color: C.ticks,
             font: { family: "DM Mono", size: 10 },
-            callback: (v) => ((v as number) < MONTHS ? v + "mo" : ">10yr"),
+            callback: (v) => ((v as number) < horizon ? v + "mo" : ">" + yrLabel + "yr"),
           },
         },
         y: {
           title: {
             display: true,
-            text: "10-year net worth →",
+            text: `${yrLabel}-year net worth →`,
             color: C.ticks,
             font: { family: "DM Mono", size: 10 },
           },
@@ -177,7 +180,7 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount }:
     labels: pareto.map((p) => `${p.pct}%`),
     datasets: [
       {
-        label: "Net worth at 10yr",
+        label: `Net worth at ${yrLabel}yr`,
         data: pareto.map((p) => p.networth),
         backgroundColor: pareto.map((p) =>
           p.pct === best.pct
@@ -219,7 +222,7 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount }:
       </ChartWrapper>
 
       <ChartWrapper
-        title="Net worth at 10 years — by invest %"
+        title={`Net worth at ${yrLabel} years — by invest %`}
         subtitle="The highlighted bar is your mathematical optimum. Bars to the left = more debt focus. Bars to the right = more investing."
       >
         <Bar data={barData as never} options={barOpts} height={220} />

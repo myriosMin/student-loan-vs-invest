@@ -1,5 +1,6 @@
 export const LOAN = 23000;
 export const MONTHS = 120;
+export const MONTHS_UNI = 240;
 
 export interface SimulateResult {
   loanH: number[];
@@ -22,6 +23,7 @@ export function simulate(
   annualReturn: number,
   annualLoanRate: number,
   loanAmount: number = LOAN,
+  months: number = MONTHS,
 ): SimulateResult {
   const mr = Math.pow(1 + annualReturn / 100, 1 / 12) - 1;
   const mlr = annualLoanRate / 100 / 12;
@@ -33,7 +35,7 @@ export function simulate(
   const portH = [0];
   const netH = [-loan];
 
-  for (let m = 1; m <= MONTHS; m++) {
+  for (let m = 1; m <= months; m++) {
     if (loan <= 0) {
       portfolio = portfolio * (1 + mr) + budget;
       loanH.push(0);
@@ -70,14 +72,15 @@ export function buildPareto(
   returnRate: number,
   loanRate: number,
   loanAmount: number = LOAN,
+  months: number = MONTHS,
 ): ParetoPoint[] {
   const pts: ParetoPoint[] = [];
   for (let pct = 0; pct <= 100; pct += 5) {
-    const r = simulate(budget, pct / 100, returnRate, loanRate, loanAmount);
+    const r = simulate(budget, pct / 100, returnRate, loanRate, loanAmount, months);
     pts.push({
       pct,
-      payoffMonth: r.payoffMonth ?? MONTHS,
-      networth: r.netH[MONTHS],
+      payoffMonth: r.payoffMonth ?? months,
+      networth: r.netH[months],
       totalInterest: r.totalInterest,
     });
   }
@@ -88,6 +91,10 @@ export function fmt(n: number): string {
   return "S$" + Math.round(n).toLocaleString();
 }
 
-export const TIME_LABELS = Array.from({ length: MONTHS + 1 }, (_, i) =>
-  i === 0 ? "Now" : i % 12 === 0 ? `Yr ${i / 12}` : "",
-);
+export function makeTimeLabels(months: number): string[] {
+  return Array.from({ length: months + 1 }, (_, i) =>
+    i === 0 ? "Now" : i % 12 === 0 ? `Yr ${i / 12}` : "",
+  );
+}
+
+export const TIME_LABELS = makeTimeLabels(MONTHS);
