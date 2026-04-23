@@ -41,6 +41,17 @@ export default function LoanCalculator() {
         <p>Tuition Fee Loan · Singapore Studies</p>
       </div>
 
+      <div className="pill-row">
+        <div className="pill">
+          Rate: <strong>~4% p.a.</strong>
+        </div>
+        <div className="pill">
+          Max tenure: <strong>10 years</strong> for poly,{" "}
+          <strong>20 years</strong> for uni
+        </div>
+        <div className="pill">Interest-free during study ✓</div>
+      </div>
+
       <SharedInputs
         budget={budget}
         setBudget={setBudget}
