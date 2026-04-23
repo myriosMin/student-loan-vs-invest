@@ -568,3 +568,21 @@ input[type="range"].invest-slider::-webkit-slider-thumb {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.footer-note {
+  margin-top: 26px;
+}
+
+.footer-meta-row {
+  justify-content: flex-start;
+  margin-bottom: 0;
+}
+
+.footer-social-link {
+  text-decoration: none;
+}
+
+.footer-social-link:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
