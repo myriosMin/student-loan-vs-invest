@@ -20,6 +20,35 @@ export default function LoanCalculator() {
   const [customOn, setCustomOn] = useState(false);
   const [customVal, setCustomVal] = useState(23000);
 
+  const [useTFL, setUseTFL] = useState(false);
+  const [tflRate, setTflRate] = useState<number | null>(null);
+  const [tflLoading, setTflLoading] = useState(false);
+
+  async function toggleTFL() {
+    if (useTFL) {
+      setUseTFL(false);
+      return;
+    }
+    setUseTFL(true);
+    if (tflRate !== null) return;
+    setTflLoading(true);
+    try {
+      const res = await fetch("/api/sora");
+      const data = await res.json();
+      if (typeof data.tflRate === "number") {
+        setTflRate(data.tflRate);
+      } else {
+        setUseTFL(false);
+      }
+    } catch {
+      setUseTFL(false);
+    } finally {
+      setTflLoading(false);
+    }
+  }
+
+  const effectiveLoanRate = useTFL && tflRate !== null ? tflRate : loanRate;
+
   const loanAmount = useMemo(() => {
     if (customOn) return customVal;
     return (polyOn ? 24000 : 0) + (uniOn ? 32000 : 0);
@@ -68,6 +97,10 @@ export default function LoanCalculator() {
         customVal={customVal}
         setCustomVal={setCustomVal}
         loanAmount={loanAmount}
+        useTFL={useTFL}
+        tflLoading={tflLoading}
+        tflRate={tflRate}
+        onToggleTFL={toggleTFL}
       />
 
       <div className={`tabs${activeTab === "optimal" ? " at-optimal" : ""}`}>
@@ -93,7 +126,7 @@ export default function LoanCalculator() {
           <ExplorerTab
             budget={budget}
             returnRate={returnRate}
-            loanRate={loanRate}
+            loanRate={effectiveLoanRate}
             loanAmount={loanAmount}
           />
         </div>
@@ -105,7 +138,7 @@ export default function LoanCalculator() {
             <OptimalTab
               budget={budget}
               returnRate={returnRate}
-              loanRate={loanRate}
+              loanRate={effectiveLoanRate}
               loanAmount={loanAmount}
             />
           )}

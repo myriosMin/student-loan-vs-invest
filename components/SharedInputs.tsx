@@ -20,6 +20,10 @@ type Props = {
   customVal: number;
   setCustomVal: (v: number) => void;
   loanAmount: number;
+  useTFL: boolean;
+  tflLoading: boolean;
+  tflRate: number | null;
+  onToggleTFL: () => void;
 };
 
 export default function SharedInputs({
@@ -38,7 +42,12 @@ export default function SharedInputs({
   customVal,
   setCustomVal,
   loanAmount,
+  useTFL,
+  tflLoading,
+  tflRate,
+  onToggleTFL,
 }: Props) {
+  const effectiveLoanRate = useTFL && tflRate !== null ? tflRate : loanRate;
   const [editingCustom, setEditingCustom] = useState(false);
   const [rawInput, setRawInput] = useState("");
   const [editingBudget, setEditingBudget] = useState(false);
@@ -198,16 +207,41 @@ export default function SharedInputs({
           onChange={setReturnRate}
           noMargin
         />
-        <SliderGroup
-          label="Loan interest rate"
-          value={`${loanRate.toFixed(1)}%`}
-          min={2}
-          max={8}
-          step={0.1}
-          current={loanRate}
-          onChange={setLoanRate}
-          noMargin
-        />
+        <div className="slider-group rate-slider-group">
+          <div className="slider-label">
+            <span>Loan interest rate</span>
+            <span className="val">{effectiveLoanRate.toFixed(2)}%</span>
+          </div>
+          <div className="loan-toggles loan-toggles-rate">
+            <button
+              type="button"
+              className={`loan-toggle${useTFL ? " active" : ""}`}
+              onClick={onToggleTFL}
+              disabled={tflLoading}
+            >
+              <span className="loan-toggle-radio" />
+              {tflLoading ? "Fetching…" : "TFL Rate"}
+            </button>
+          </div>
+          {useTFL && tflRate !== null && (
+            <p className="loan-toggle-hint loan-toggle-hint-rate">
+              3M SORA ({(tflRate - 1.5).toFixed(3)}%) + 1.5%
+            </p>
+          )}
+          <input
+            type="range"
+            aria-label="Loan interest rate slider"
+            min={2}
+            max={8}
+            step={0.1}
+            value={Math.min(Math.max(effectiveLoanRate, 2), 8)}
+            onChange={(e) => {
+              if (useTFL) return;
+              setLoanRate(Number(e.target.value));
+            }}
+            className={useTFL ? "slider-disabled" : undefined}
+          />
+        </div>
       </div>
     </div>
   );

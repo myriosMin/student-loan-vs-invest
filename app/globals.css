@@ -348,6 +348,20 @@ input[type="range"].invest-slider::-webkit-slider-thumb {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+.rate-slider-group {
+  margin-bottom: 0;
+}
+.loan-toggles-rate {
+  margin-bottom: 8px;
+}
+.loan-toggle-hint-rate {
+  margin-bottom: 8px;
+}
+.slider-disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
 
 .stats-grid {
   display: grid;
