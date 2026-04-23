@@ -5,7 +5,6 @@ import { Line } from 'react-chartjs-2';
 import type { ChartOptions } from 'chart.js';
 import '../lib/chartSetup';
 import { simulate, fmt, TIME_LABELS, MONTHS } from '../lib/calculator';
-import SliderGroup from './SliderGroup';
 import StatCard from './StatCard';
 import ChartWrapper from './ChartWrapper';
 
@@ -61,11 +60,14 @@ const lineOpts: ChartOptions<'line'> = {
   scales: baseScales,
 };
 
-export default function ExplorerTab() {
-  const [budget, setBudget] = useState(600);
+type Props = {
+  budget: number;
+  returnRate: number;
+  loanRate: number;
+};
+
+export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
   const [investPct, setInvestPct] = useState(30);
-  const [returnRate, setReturnRate] = useState(7);
-  const [loanRate, setLoanRate] = useState(4.5);
 
   const investFrac = investPct / 100;
   const debtAmt = Math.max(100, budget * (1 - investFrac));
@@ -173,17 +175,7 @@ export default function ExplorerTab() {
   return (
     <>
       <div className="controls">
-        <h2>Your inputs</h2>
-
-        <SliderGroup
-          label="Monthly budget"
-          value={fmt(budget)}
-          min={200}
-          max={2000}
-          step={50}
-          current={budget}
-          onChange={setBudget}
-        />
+        <h2>Allocation</h2>
 
         <div className="slider-group">
           <div className="slider-label">
@@ -207,29 +199,6 @@ export default function ExplorerTab() {
             <span className="dl">Loan: {fmt(debtAmt)}</span>
             <span className="il">Invest: {fmt(investAmt)}</span>
           </div>
-        </div>
-
-        <div className="rate-row">
-          <SliderGroup
-            label="Investment return (% p.a.)"
-            value={`${returnRate.toFixed(1)}%`}
-            min={3}
-            max={15}
-            step={0.5}
-            current={returnRate}
-            onChange={setReturnRate}
-            noMargin
-          />
-          <SliderGroup
-            label="Loan interest rate"
-            value={`${loanRate.toFixed(1)}%`}
-            min={2}
-            max={8}
-            step={0.1}
-            current={loanRate}
-            onChange={setLoanRate}
-            noMargin
-          />
         </div>
       </div>
 

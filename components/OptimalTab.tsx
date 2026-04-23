@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Scatter, Bar } from 'react-chartjs-2';
 import type { ChartOptions } from 'chart.js';
 import '../lib/chartSetup';
 import { buildPareto, fmt, MONTHS } from '../lib/calculator';
-import SliderGroup from './SliderGroup';
 import ChartWrapper from './ChartWrapper';
 
 const C = {
@@ -17,10 +16,13 @@ const C = {
   tooltipBody: '#9a7f5a',
 };
 
-export default function OptimalTab() {
-  const [budget, setBudget] = useState(600);
-  const [returnRate, setReturnRate] = useState(7);
-  const [loanRate, setLoanRate] = useState(4.5);
+type Props = {
+  budget: number;
+  returnRate: number;
+  loanRate: number;
+};
+
+export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
 
   const pareto = useMemo(
     () => buildPareto(budget, returnRate, loanRate),
@@ -184,41 +186,6 @@ export default function OptimalTab() {
 
   return (
     <>
-      <div className="controls">
-        <h2>Assumptions</h2>
-        <SliderGroup
-          label="Monthly budget"
-          value={fmt(budget)}
-          min={200}
-          max={2000}
-          step={50}
-          current={budget}
-          onChange={setBudget}
-        />
-        <div className="rate-row">
-          <SliderGroup
-            label="Investment return (% p.a.)"
-            value={`${returnRate.toFixed(1)}%`}
-            min={3}
-            max={15}
-            step={0.5}
-            current={returnRate}
-            onChange={setReturnRate}
-            noMargin
-          />
-          <SliderGroup
-            label="Loan interest rate"
-            value={`${loanRate.toFixed(1)}%`}
-            min={2}
-            max={8}
-            step={0.1}
-            current={loanRate}
-            onChange={setLoanRate}
-            noMargin
-          />
-        </div>
-      </div>
-
       <div className={`optimal-callout ${isPositive ? 'green' : 'yellow'}`}>
         <h3 className={isPositive ? 'green' : 'yellow'}>{calloutTitle}</h3>
         <p dangerouslySetInnerHTML={{ __html: calloutBody }} />

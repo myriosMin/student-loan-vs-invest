@@ -1,18 +1,23 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import ExplorerTab from './ExplorerTab';
-import OptimalTab from './OptimalTab';
+import { useState } from "react";
+import ExplorerTab from "./ExplorerTab";
+import OptimalTab from "./OptimalTab";
+import SharedInputs from "./SharedInputs";
 
-type Tab = 'explorer' | 'optimal';
+type Tab = "explorer" | "optimal";
 
 export default function LoanCalculator() {
-  const [activeTab, setActiveTab] = useState<Tab>('explorer');
+  const [activeTab, setActiveTab] = useState<Tab>("explorer");
   const [optimalMounted, setOptimalMounted] = useState(false);
+
+  const [budget, setBudget] = useState(600);
+  const [returnRate, setReturnRate] = useState(7);
+  const [loanRate, setLoanRate] = useState(4.5);
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
-    if (tab === 'optimal') setOptimalMounted(true);
+    if (tab === "optimal") setOptimalMounted(true);
   }
 
   return (
@@ -23,7 +28,7 @@ export default function LoanCalculator() {
           <br />
           <span>Planner</span>
         </h1>
-        <p>DBS Tuition Fee Loan · Singapore Polytechnic</p>
+        <p>Tuition Fee Loan · Singapore Studies</p>
       </div>
 
       <div className="pill-row">
@@ -39,27 +44,41 @@ export default function LoanCalculator() {
         <div className="pill">Interest-free during study ✓</div>
       </div>
 
-      <div className="tabs">
+      <SharedInputs
+        budget={budget}
+        setBudget={setBudget}
+        returnRate={returnRate}
+        setReturnRate={setReturnRate}
+        loanRate={loanRate}
+        setLoanRate={setLoanRate}
+      />
+
+      <div className={`tabs${activeTab === "optimal" ? " at-optimal" : ""}`}>
+        <div className="tab-indicator" />
         <button
-          className={`tab${activeTab === 'explorer' ? ' active' : ''}`}
-          onClick={() => switchTab('explorer')}
+          className={`tab${activeTab === "explorer" ? " active" : ""}`}
+          onClick={() => switchTab("explorer")}
         >
-          🎛 Explorer
+          Explorer
         </button>
         <button
-          className={`tab${activeTab === 'optimal' ? ' active' : ''}`}
-          onClick={() => switchTab('optimal')}
+          className={`tab${activeTab === "optimal" ? " active" : ""}`}
+          onClick={() => switchTab("optimal")}
         >
-          📐 Optimal Split
+          Optimal Split
         </button>
       </div>
 
-      <div className={`panel${activeTab === 'explorer' ? ' active' : ''}`}>
-        <ExplorerTab />
-      </div>
+      <div className="panels-wrapper">
+        <div className={`panel panel-explorer${activeTab === "explorer" ? " active" : ""}`}>
+          <ExplorerTab budget={budget} returnRate={returnRate} loanRate={loanRate} />
+        </div>
 
-      <div className={`panel${activeTab === 'optimal' ? ' active' : ''}`}>
-        {optimalMounted && <OptimalTab />}
+        <div className={`panel panel-optimal${activeTab === "optimal" ? " active" : ""}`}>
+          {optimalMounted && (
+            <OptimalTab budget={budget} returnRate={returnRate} loanRate={loanRate} />
+          )}
+        </div>
       </div>
     </>
   );
