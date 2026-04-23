@@ -54,7 +54,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 18px;
-  margin-bottom: 20px;
+  width: min(100%, 720px);
+  margin: 0 auto 20px;
   font-size: 0.82rem;
   color: var(--muted);
   line-height: 1.6;
@@ -62,18 +63,18 @@ body {
 .guide strong {
   color: var(--text);
 }
-.guide .guide-steps {
+.guide-steps {
   margin-top: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.guide .guide-step {
+.guide-step {
   display: flex;
   gap: 8px;
   align-items: baseline;
 }
-.guide .guide-step-num {
+.guide-step-num {
   font-family: var(--font-dm-mono), "DM Mono", monospace;
   font-size: 0.68rem;
   color: var(--accent);
