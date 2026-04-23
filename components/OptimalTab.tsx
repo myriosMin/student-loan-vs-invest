@@ -31,7 +31,13 @@ type Props = {
   horizon: number;
 };
 
-export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, horizon }: Props) {
+export default function OptimalTab({
+  budget,
+  returnRate,
+  loanRate,
+  loanAmount,
+  horizon,
+}: Props) {
   const yrLabel = horizon / 12;
 
   const pareto = useMemo(
@@ -39,26 +45,31 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
     [budget, returnRate, loanRate, loanAmount, horizon],
   );
 
-  const best = useMemo(
-    () => pareto.reduce((b, p) => (p.networth > b.networth ? p : b), pareto[0]),
-    [pareto],
+  const goldPoint = useMemo(
+    () =>
+      pareto
+        .filter((p) => p.payoffMonth < horizon)
+        .reduce<
+          (typeof pareto)[number] | null
+        >((acc, p) => (acc === null || p.pct > acc.pct ? p : acc), null),
+    [pareto, horizon],
   );
 
   const spread = returnRate - loanRate;
   const fastPayoff = pareto[0].payoffMonth;
-  const bestPayoff = best.payoffMonth;
-  const gain = fmt(best.networth - pareto[0].networth);
-  const loanAmt = fmt(Math.max(100, budget * (1 - best.pct / 100)));
-  const invAmt = fmt((budget * best.pct) / 100);
+  const isPositive = spread > 0 && goldPoint !== null;
+  const gain = goldPoint ? fmt(goldPoint.networth - pareto[0].networth) : "";
+  const loanAmt = goldPoint
+    ? fmt(Math.max(100, budget * (1 - goldPoint.pct / 100)))
+    : "";
+  const invAmt = goldPoint ? fmt((budget * goldPoint.pct) / 100) : "";
 
-  const isPositive = spread > 0;
-
-  const calloutTitle = isPositive
-    ? `✦ Optimal split: invest ${best.pct}% / repay ${100 - best.pct}%`
+  const calloutTitle = goldPoint
+    ? `✦ Optimal split: invest ${goldPoint.pct}% / repay ${100 - goldPoint.pct}%`
     : "✦ Optimal: pay off loan first";
 
-  const calloutBody = isPositive
-    ? `At ${fmt(budget)}/mo with a <strong>${spread.toFixed(1)}% return spread</strong>, the math says put <strong class="g">${invAmt}/mo into investments</strong> and <strong class="g">${loanAmt}/mo toward the loan</strong>.<br><br>This maximises your ${yrLabel}-year net worth at <strong>${fmt(best.networth)}</strong> — <span class="g">${gain} more</span> than paying debt only. The loan clears in <strong>${bestPayoff < horizon ? (bestPayoff / 12).toFixed(1) + "yr" : ">" + yrLabel + "yr"}</strong> vs <strong>${fastPayoff ? (fastPayoff / 12).toFixed(1) + "yr" : ">" + yrLabel + "yr"}</strong> if you paid debt-first.<br><br>Note: when return > loan rate, the model almost always recommends maximising investing (paying minimum $100/mo on loan). The frontier is relatively flat beyond ~60% invest — meaning you gain little extra by going to 90–100% invest, but you take on much more risk of not covering the loan if income drops.`
+  const calloutBody = goldPoint
+    ? `At ${fmt(budget)}/mo with a <strong>${spread.toFixed(1)}% return spread</strong>, the math says put <strong class="g">${invAmt}/mo into investments</strong> and <strong class="g">${loanAmt}/mo toward the loan</strong>.<br><br>This maximises your ${yrLabel}-year net worth at <strong>${fmt(goldPoint.networth)}</strong> — <span class="g">${gain} more</span> than paying debt only. The loan clears in <strong>${(goldPoint.payoffMonth / 12).toFixed(1)}yr</strong> vs <strong>${fastPayoff ? (fastPayoff / 12).toFixed(1) + "yr" : ">" + yrLabel + "yr"}</strong> if you paid debt-first.<br><br>Note: when return > loan rate, the model almost always recommends maximising investing (paying minimum $100/mo on loan). The frontier is relatively flat beyond ~60% invest — meaning you gain little extra by going to 90–100% invest, but you take on much more risk of not covering the loan if income drops.`
     : `Your loan rate (${loanRate.toFixed(1)}%) is higher than your expected return (${returnRate}%). Every dollar invested earns less than it costs you in interest. The math says <strong class="r">pay off the loan first</strong> — it's a guaranteed ${loanRate.toFixed(1)}% risk-free return. Once cleared, redirect everything into investing.`;
 
   const scatterOpts = useMemo<ChartOptions<"scatter">>(
@@ -76,7 +87,11 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
           callbacks: {
             title: () => "",
             label: (ctx) => {
-              const raw = ctx.raw as { pct: number; payoffMonth: number; networth: number };
+              const raw = ctx.raw as {
+                pct: number;
+                payoffMonth: number;
+                networth: number;
+              };
               return [
                 ` Invest ${raw.pct}% / Loan ${100 - raw.pct}%`,
                 ` Payoff: ${
@@ -105,7 +120,8 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
           ticks: {
             color: C.ticks,
             font: { family: "DM Mono", size: 10 },
-            callback: (v) => ((v as number) < horizon ? v + "mo" : ">" + yrLabel + "yr"),
+            callback: (v) =>
+              (v as number) < horizon ? v + "mo" : ">" + yrLabel + "yr",
           },
         },
         y: {
@@ -171,13 +187,6 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
     networth: p.networth,
   });
 
-  const goldPoint = pareto
-    .filter((p) => p.payoffMonth < horizon)
-    .reduce<(typeof pareto)[number] | null>(
-      (acc, p) => (acc === null || p.pct > acc.pct ? p : acc),
-      null,
-    );
-
   const isGoldDot = (p: (typeof pareto)[number]) =>
     goldPoint !== null && p.pct === goldPoint.pct;
 
@@ -222,14 +231,14 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
         label: `Net worth at ${yrLabel}yr`,
         data: pareto.map((p) => p.networth),
         backgroundColor: pareto.map((p) =>
-          p.pct === best.pct
+          goldPoint !== null && p.pct === goldPoint.pct
             ? "#d4870a"
             : p.networth < 0
               ? "#e0525244"
               : "#7c6af744",
         ),
         borderColor: pareto.map((p) =>
-          p.pct === best.pct
+          goldPoint !== null && p.pct === goldPoint.pct
             ? "#d4870a"
             : p.networth < 0
               ? "#e05252"
@@ -273,23 +282,24 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
           <span className="r">
             ① Investment returns aren&apos;t guaranteed.
           </span>{" "}
-          7% is a long-run average — in any 3-year stretch you could be down 30%
-          while the loan keeps accruing.
+          <br></br>7% is a long-run average — in any 3-year stretch you could be
+          down 30% while the loan interest keeps accruing.
           <br />
           <br />
-          <span className="r">② Psychological debt stress matters.</span> Being
-          debt-free has non-financial value — it gives you more job flexibility
-          and peace of mind.
+          <span className="r">② Psychological debt stress matters.</span>{" "}
+          <br></br>Being debt-free has non-financial value — it gives you more
+          job flexibility and peace of mind.
           <br />
           <br />
-          <span className="g">③ Time in market is powerful.</span> Starting to
-          invest S$100/mo early beats waiting until the loan clears — the first
-          years of compounding are the most valuable.
+          <span className="g">③ Time in market is powerful.</span> <br></br>
+          Starting to invest S$100/mo early beats waiting until the loan clears
+          — the first years of compounding are the most valuable.
           <br />
           <br />
-          <strong>Practical recommendation:</strong> Pay minimum ($100/mo) on
-          the loan, build a 3-month emergency fund first, then invest the rest.
-          Don&apos;t go 100% invest unless you have very stable income.
+          <strong>Practical recommendation:</strong> <br></br>Pay minimum
+          ($100/mo) on the loan, build a 3-month emergency fund first, then
+          invest the rest. Don&apos;t go 100% invest unless you have very stable
+          income.
         </p>
       </div>
     </>
