@@ -67,9 +67,10 @@ type Props = {
   budget: number;
   returnRate: number;
   loanRate: number;
+  loanAmount: number;
 };
 
-export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
+export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }: Props) {
   const [investPct, setInvestPct] = useState(30);
 
   const investFrac = investPct / 100;
@@ -77,16 +78,16 @@ export default function ExplorerTab({ budget, returnRate, loanRate }: Props) {
   const investAmt = budget * investFrac;
 
   const r = useMemo(
-    () => simulate(budget, investFrac, returnRate, loanRate),
-    [budget, investFrac, returnRate, loanRate],
+    () => simulate(budget, investFrac, returnRate, loanRate, loanAmount),
+    [budget, investFrac, returnRate, loanRate, loanAmount],
   );
   const rD = useMemo(
-    () => simulate(budget, 0, returnRate, loanRate),
-    [budget, returnRate, loanRate],
+    () => simulate(budget, 0, returnRate, loanRate, loanAmount),
+    [budget, returnRate, loanRate, loanAmount],
   );
   const rI = useMemo(
-    () => simulate(budget, 0.9, returnRate, loanRate),
-    [budget, returnRate, loanRate],
+    () => simulate(budget, 0.9, returnRate, loanRate, loanAmount),
+    [budget, returnRate, loanRate, loanAmount],
   );
 
   const payMo = r.payoffMonth ?? MONTHS;

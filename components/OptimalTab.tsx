@@ -20,12 +20,13 @@ type Props = {
   budget: number;
   returnRate: number;
   loanRate: number;
+  loanAmount: number;
 };
 
-export default function OptimalTab({ budget, returnRate, loanRate }: Props) {
+export default function OptimalTab({ budget, returnRate, loanRate, loanAmount }: Props) {
   const pareto = useMemo(
-    () => buildPareto(budget, returnRate, loanRate),
-    [budget, returnRate, loanRate],
+    () => buildPareto(budget, returnRate, loanRate, loanAmount),
+    [budget, returnRate, loanRate, loanAmount],
   );
 
   const best = useMemo(

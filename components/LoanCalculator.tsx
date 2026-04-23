@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ExplorerTab from "./ExplorerTab";
 import OptimalTab from "./OptimalTab";
 import SharedInputs from "./SharedInputs";
@@ -14,6 +14,16 @@ export default function LoanCalculator() {
   const [budget, setBudget] = useState(600);
   const [returnRate, setReturnRate] = useState(7);
   const [loanRate, setLoanRate] = useState(4.5);
+
+  const [polyOn, setPolyOn] = useState(true);
+  const [uniOn, setUniOn] = useState(false);
+  const [customOn, setCustomOn] = useState(false);
+  const [customVal, setCustomVal] = useState(23000);
+
+  const loanAmount = useMemo(() => {
+    if (customOn) return customVal;
+    return (polyOn ? 24000 : 0) + (uniOn ? 32000 : 0);
+  }, [customOn, customVal, polyOn, uniOn]);
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
@@ -31,19 +41,6 @@ export default function LoanCalculator() {
         <p>Tuition Fee Loan · Singapore Studies</p>
       </div>
 
-      <div className="pill-row">
-        <div className="pill">
-          Loan: <strong>S$23,000</strong>
-        </div>
-        <div className="pill">
-          Rate: <strong>4.5% p.a.</strong>
-        </div>
-        <div className="pill">
-          Max tenure: <strong>10 years</strong>
-        </div>
-        <div className="pill">Interest-free during study ✓</div>
-      </div>
-
       <SharedInputs
         budget={budget}
         setBudget={setBudget}
@@ -51,6 +48,15 @@ export default function LoanCalculator() {
         setReturnRate={setReturnRate}
         loanRate={loanRate}
         setLoanRate={setLoanRate}
+        polyOn={polyOn}
+        setPolyOn={setPolyOn}
+        uniOn={uniOn}
+        setUniOn={setUniOn}
+        customOn={customOn}
+        setCustomOn={setCustomOn}
+        customVal={customVal}
+        setCustomVal={setCustomVal}
+        loanAmount={loanAmount}
       />
 
       <div className={`tabs${activeTab === "optimal" ? " at-optimal" : ""}`}>
@@ -77,6 +83,7 @@ export default function LoanCalculator() {
             budget={budget}
             returnRate={returnRate}
             loanRate={loanRate}
+            loanAmount={loanAmount}
           />
         </div>
 
@@ -88,6 +95,7 @@ export default function LoanCalculator() {
               budget={budget}
               returnRate={returnRate}
               loanRate={loanRate}
+              loanAmount={loanAmount}
             />
           )}
         </div>

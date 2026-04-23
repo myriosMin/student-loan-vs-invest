@@ -235,6 +235,46 @@ input[type="range"].invest-slider::-webkit-slider-thumb {
   color: var(--invest-color);
 }
 
+.loan-toggles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.loan-toggle {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-dm-sans), "DM Sans", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.loan-toggle:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.loan-toggle.active {
+  background: rgba(212, 135, 10, 0.12);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.loan-toggle-amt {
+  font-family: var(--font-dm-mono), "DM Mono", monospace;
+  font-size: 0.7rem;
+  margin-left: 4px;
+  opacity: 0.75;
+}
+.loan-toggle-hint {
+  font-family: var(--font-dm-mono), "DM Mono", monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
 .rate-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

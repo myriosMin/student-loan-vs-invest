@@ -10,6 +10,15 @@ type Props = {
   setReturnRate: (v: number) => void;
   loanRate: number;
   setLoanRate: (v: number) => void;
+  polyOn: boolean;
+  setPolyOn: (v: boolean) => void;
+  uniOn: boolean;
+  setUniOn: (v: boolean) => void;
+  customOn: boolean;
+  setCustomOn: (v: boolean) => void;
+  customVal: number;
+  setCustomVal: (v: number) => void;
+  loanAmount: number;
 };
 
 export default function SharedInputs({
@@ -19,10 +28,86 @@ export default function SharedInputs({
   setReturnRate,
   loanRate,
   setLoanRate,
+  polyOn,
+  setPolyOn,
+  uniOn,
+  setUniOn,
+  customOn,
+  setCustomOn,
+  customVal,
+  setCustomVal,
+  loanAmount,
 }: Props) {
+  function handlePolyClick() {
+    setCustomOn(false);
+    setPolyOn(!polyOn);
+  }
+
+  function handleUniClick() {
+    setCustomOn(false);
+    setUniOn(!uniOn);
+  }
+
+  function handleCustomClick() {
+    setCustomOn(true);
+    setPolyOn(false);
+    setUniOn(false);
+  }
+
   return (
     <div className="controls">
       <h2>Assumptions</h2>
+
+      <div className="slider-group">
+        <div className="slider-label">
+          <span>Loan amount</span>
+          <span className="val">{fmt(loanAmount)}</span>
+        </div>
+        <div className="loan-toggles">
+          <button
+            className={`loan-toggle${polyOn && !customOn ? " active" : ""}`}
+            onClick={handlePolyClick}
+          >
+            Poly <span className="loan-toggle-amt">S$24k</span>
+          </button>
+          <button
+            className={`loan-toggle${uniOn && !customOn ? " active" : ""}`}
+            onClick={handleUniClick}
+          >
+            Uni <span className="loan-toggle-amt">S$32k</span>
+          </button>
+          <button
+            className={`loan-toggle${customOn ? " active" : ""}`}
+            onClick={handleCustomClick}
+          >
+            Custom
+          </button>
+        </div>
+        {!customOn && (polyOn || uniOn) && (
+          <p className="loan-toggle-hint">
+            {polyOn && uniOn
+              ? "Poly + Uni combined"
+              : polyOn
+              ? "Poly only"
+              : "Uni only"}
+          </p>
+        )}
+        {customOn && (
+          <div style={{ marginTop: 14 }}>
+            <SliderGroup
+              label="Custom loan amount"
+              value={fmt(customVal)}
+              min={5000}
+              max={150000}
+              step={1000}
+              current={customVal}
+              onChange={setCustomVal}
+              noMargin
+            />
+          </div>
+        )}
+      </div>
+
       <SliderGroup
         label="Monthly budget"
         value={fmt(budget)}
@@ -32,6 +117,7 @@ export default function SharedInputs({
         current={budget}
         onChange={setBudget}
       />
+
       <div className="rate-row">
         <SliderGroup
           label="Investment return (% p.a.)"

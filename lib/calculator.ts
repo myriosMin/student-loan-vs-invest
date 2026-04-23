@@ -21,10 +21,11 @@ export function simulate(
   investFrac: number,
   annualReturn: number,
   annualLoanRate: number,
+  loanAmount: number = LOAN,
 ): SimulateResult {
   const mr = Math.pow(1 + annualReturn / 100, 1 / 12) - 1;
   const mlr = annualLoanRate / 100 / 12;
-  let loan = LOAN;
+  let loan = loanAmount;
   let portfolio = 0;
   let totalInterest = 0;
   let payoffMonth: number | null = null;
@@ -68,10 +69,11 @@ export function buildPareto(
   budget: number,
   returnRate: number,
   loanRate: number,
+  loanAmount: number = LOAN,
 ): ParetoPoint[] {
   const pts: ParetoPoint[] = [];
   for (let pct = 0; pct <= 100; pct += 5) {
-    const r = simulate(budget, pct / 100, returnRate, loanRate);
+    const r = simulate(budget, pct / 100, returnRate, loanRate, loanAmount);
     pts.push({
       pct,
       payoffMonth: r.payoffMonth ?? MONTHS,
