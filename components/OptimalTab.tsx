@@ -171,13 +171,15 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
     networth: p.networth,
   });
 
-  const closestToBest = pareto.reduce((acc, p) =>
-    Math.abs(p.pct - best.pct) < Math.abs(acc.pct - best.pct) ? p : acc,
-    pareto[0],
-  );
+  const goldPoint = pareto
+    .filter((p) => p.payoffMonth < horizon)
+    .reduce<(typeof pareto)[number] | null>(
+      (acc, p) => (acc === null || p.pct > acc.pct ? p : acc),
+      null,
+    );
 
   const isGoldDot = (p: (typeof pareto)[number]) =>
-    p.pct === closestToBest.pct && best.payoffMonth < horizon;
+    goldPoint !== null && p.pct === goldPoint.pct;
 
   const regularPoints = pareto.filter((p) => p.pct !== 0 && !isGoldDot(p));
 
@@ -199,11 +201,11 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
         pointRadius: 9,
         pointHoverRadius: 12,
       },
-      ...(best.payoffMonth < horizon
+      ...(goldPoint !== null
         ? [
             {
               label: "Optimal",
-              data: [makePoint(best)],
+              data: [makePoint(goldPoint)],
               backgroundColor: COLORS.gold,
               pointRadius: 9,
               pointHoverRadius: 12,
