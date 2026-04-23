@@ -56,7 +56,7 @@ body {
   padding: 14px 18px;
   width: min(100%, 720px);
   margin: 0 auto 20px;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   color: var(--muted);
   line-height: 1.6;
 }
@@ -76,7 +76,7 @@ body {
 }
 .guide-step-num {
   font-family: var(--font-dm-mono), "DM Mono", monospace;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--accent);
   font-weight: 700;
   flex-shrink: 0;
@@ -287,7 +287,10 @@ input[type="range"].invest-slider::-webkit-slider-thumb {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--muted);
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
 }
 .loan-toggle:hover {
   border-color: var(--accent);
