@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { fmt } from "../lib/calculator";
 import SliderGroup from "./SliderGroup";
 
@@ -38,6 +39,9 @@ export default function SharedInputs({
   setCustomVal,
   loanAmount,
 }: Props) {
+  const [editingCustom, setEditingCustom] = useState(false);
+  const [rawInput, setRawInput] = useState("");
+
   function handlePolyClick() {
     setCustomOn(false);
     setPolyOn(!polyOn);
@@ -54,6 +58,17 @@ export default function SharedInputs({
     setUniOn(false);
   }
 
+  function startEdit() {
+    setRawInput(String(customVal));
+    setEditingCustom(true);
+  }
+
+  function commitEdit(raw: string) {
+    const parsed = parseInt(raw, 10);
+    if (!isNaN(parsed) && parsed > 0) setCustomVal(parsed);
+    setEditingCustom(false);
+  }
+
   return (
     <div className="controls">
       <h2>Assumptions</h2>
@@ -61,25 +76,53 @@ export default function SharedInputs({
       <div className="slider-group">
         <div className="slider-label">
           <span>Loan amount</span>
-          <span className="val">{fmt(loanAmount)}</span>
+          {customOn ? (
+            editingCustom ? (
+              <input
+                className="val val-input"
+                type="number"
+                aria-label="Custom loan amount"
+                value={rawInput}
+                onChange={(e) => setRawInput(e.target.value)}
+                onBlur={(e) => commitEdit(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.currentTarget.blur();
+                  if (e.key === "Escape") setEditingCustom(false);
+                }}
+                autoFocus
+              />
+            ) : (
+              <button type="button" className="val val-editable" onClick={startEdit}>
+                {fmt(loanAmount)}
+              </button>
+            )
+          ) : (
+            <span className="val">{fmt(loanAmount)}</span>
+          )}
         </div>
         <div className="loan-toggles">
           <button
+            type="button"
             className={`loan-toggle${polyOn && !customOn ? " active" : ""}`}
             onClick={handlePolyClick}
           >
+            <span className="loan-toggle-check" />
             Poly <span className="loan-toggle-amt">S$24k</span>
           </button>
           <button
+            type="button"
             className={`loan-toggle${uniOn && !customOn ? " active" : ""}`}
             onClick={handleUniClick}
           >
+            <span className="loan-toggle-check" />
             Uni <span className="loan-toggle-amt">S$32k</span>
           </button>
           <button
+            type="button"
             className={`loan-toggle${customOn ? " active" : ""}`}
             onClick={handleCustomClick}
           >
+            <span className="loan-toggle-radio" />
             Custom
           </button>
         </div>
@@ -92,19 +135,8 @@ export default function SharedInputs({
               : "Uni only"}
           </p>
         )}
-        {customOn && (
-          <div style={{ marginTop: 14 }}>
-            <SliderGroup
-              label="Custom loan amount"
-              value={fmt(customVal)}
-              min={5000}
-              max={150000}
-              step={1000}
-              current={customVal}
-              onChange={setCustomVal}
-              noMargin
-            />
-          </div>
+        {customOn && !editingCustom && (
+          <p className="loan-toggle-hint">Tap the amount above to edit</p>
         )}
       </div>
 
