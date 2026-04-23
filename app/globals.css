@@ -31,6 +31,15 @@ body {
   text-align: center;
   margin-bottom: 28px;
 }
+.header-icon-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.header-icon {
+  width: 96px;
+  height: 96px;
+}
 .header h1 {
   font-size: clamp(1.4rem, 4vw, 2rem);
   font-weight: 800;
@@ -569,20 +578,23 @@ input[type="range"].invest-slider::-webkit-slider-thumb {
   }
 }
 
-.footer-note {
-  margin-top: 26px;
-}
-
 .footer-meta-row {
   justify-content: flex-start;
   margin-bottom: 0;
 }
 
+.footer-note p:last-child {
+  text-align: right;
+}
+
 .footer-social-link {
-  text-decoration: none;
+  text-decoration: underline;
+  text-align: right;
+  color: var(--muted);
 }
 
 .footer-social-link:hover {
   color: var(--text);
   border-color: var(--accent);
+  /* change text color also */
 }

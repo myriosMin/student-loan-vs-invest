@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { MONTHS, MONTHS_UNI } from "../lib/calculator";
 import ExplorerTab from "./ExplorerTab";
+import Footer from "./Footer";
 import OptimalTab from "./OptimalTab";
 import SharedInputs from "./SharedInputs";
+import icon from "../app/public/icon.png";
 
 type Tab = "explorer" | "optimal";
 
@@ -65,29 +68,22 @@ export default function LoanCalculator() {
   return (
     <>
       <div className="header">
+        <div className="header-icon-wrap">
+          <Image
+            className="header-icon"
+            src={icon}
+            alt="Loan vs Invest icon"
+            width={96}
+            height={96}
+            priority
+          />
+        </div>
         <h1>
           Loan vs Invest
           <br />
           <span>Planner</span>
         </h1>
         <p>Tuition Fee Loan · Singapore Studies</p>
-      </div>
-
-      <div className="guide">
-        <strong>How it works:</strong>{" "}
-        Each month, you split your budget between repaying your loan and investing. The lower your loan rate compared to your investment returns, the more it can make sense to invest rather than rush to pay off debt.
-        <div className="guide-steps">
-          {[
-            ["1.", "Choose your loan type and set your monthly budget below."],
-            ["2.", <><strong>Explorer</strong> — drag the slider to see how different loan/invest splits play out over time.</>],
-            ["3.", <><strong>Optimal</strong> — find the split that pays off your loan fastest while still growing your portfolio.</>],
-          ].map(([num, text]) => (
-            <div key={String(num)} className="guide-step">
-              <span className="guide-step-num">{num}</span>
-              <span>{text}</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="pill-row">
@@ -98,6 +94,43 @@ export default function LoanCalculator() {
         <div className="pill">
           Max tenure: <strong>10 years</strong> for poly,{" "}
           <strong>20 years</strong> for uni
+        </div>
+      </div>
+
+      <div className="guide">
+        <strong>Story:</strong> Are you an international student graudating with
+        a ton of student debt and wondering whether to pay it off quickly or
+        invest for the future? This tool can help you find the right balance
+        based on your loan details, investment returns, and budget.
+      </div>
+      <div className="guide">
+        <strong>How it works:</strong> Each month, you split your payoff budget
+        between repaying your loan and investing. The lower your loan rate
+        compared to your investment returns, the more it can make sense to
+        invest rather than rush to pay off debt.
+        <div className="guide-steps">
+          {[
+            ["1.", "Choose your loan type and set your monthly budget below."],
+            [
+              "2.",
+              <>
+                <strong>Explorer</strong> — drag the slider to see how different
+                loan/invest splits play out over time.
+              </>,
+            ],
+            [
+              "3.",
+              <>
+                <strong>Optimal</strong> — find the split that pays off your
+                loan fastest while still growing your portfolio.
+              </>,
+            ],
+          ].map(([num, text]) => (
+            <div key={String(num)} className="guide-step">
+              <span className="guide-step-num">{num}</span>
+              <span>{text}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -166,6 +199,8 @@ export default function LoanCalculator() {
           )}
         </div>
       </div>
+
+      <Footer />
     </>
   );
 }

@@ -8,25 +8,27 @@ export default function Footer({
   socialUrl = "https://www.linkedin.com/in/min-phyo-thura/",
 }: FooterProps) {
   return (
-    <footer className="guide footer-note" aria-label="Disclaimer and creator details">
+    <footer
+      className="guide footer-note"
+      aria-label="Disclaimer and creator details"
+    >
       <p>
-        <strong>Not financial advice:</strong> this is a visualization tool to
-        help you compare how student debt repayment and early investing may
-        grow over time.
+        <strong>Happy FYI:</strong> This is not a financial advice but rather a
+        visualization tool to help you compare how student debt repayment and
+        early investing may grow over time.
       </p>
-      <div className="pill-row footer-meta-row">
-        <div className="pill">
-          Made by <strong>{creatorName}</strong>
-        </div>
+      <p>
+        - Made by{" "}
         <a
-          className="pill footer-social-link"
+          className="footer-social-link"
           href={socialUrl}
           target="_blank"
           rel="noreferrer"
         >
-          Social
-        </a>
-      </div>
+          <strong>{creatorName}</strong>
+        </a>{" "}
+        -
+      </p>
     </footer>
   );
 }
