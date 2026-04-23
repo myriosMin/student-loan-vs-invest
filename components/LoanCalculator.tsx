@@ -73,6 +73,24 @@ export default function LoanCalculator() {
         <p>Tuition Fee Loan · Singapore Studies</p>
       </div>
 
+      <div className="guide">
+        <strong>How it works:</strong> Each month, you split your budget between repaying your loan and investing. The lower your loan rate compared to your investment returns, the more it can make sense to invest instead of rushing to pay off debt.
+        <div className="guide-steps">
+          <div className="guide-step">
+            <span className="guide-step-num">1.</span>
+            <span>Choose your loan type and set your monthly budget below.</span>
+          </div>
+          <div className="guide-step">
+            <span className="guide-step-num">2.</span>
+            <span><strong>Explorer</strong> — drag the slider to see how different loan/invest splits play out over time.</span>
+          </div>
+          <div className="guide-step">
+            <span className="guide-step-num">3.</span>
+            <span><strong>Optimal</strong> — find the split that pays off your loan fastest while still growing your portfolio.</span>
+          </div>
+        </div>
+      </div>
+
       <div className="pill-row">
         <div className="pill">
           Rate: <strong>~4% p.a.</strong>

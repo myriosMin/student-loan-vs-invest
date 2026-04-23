@@ -49,6 +49,38 @@ body {
   text-transform: uppercase;
 }
 
+.guide {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.guide strong {
+  color: var(--text);
+}
+.guide .guide-steps {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.guide .guide-step {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.guide .guide-step-num {
+  font-family: var(--font-dm-mono), "DM Mono", monospace;
+  font-size: 0.68rem;
+  color: var(--accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 .pill-row {
   display: flex;
   justify-content: center;
