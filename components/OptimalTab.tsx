@@ -171,8 +171,13 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
     networth: p.networth,
   });
 
+  const closestToBest = pareto.reduce((acc, p) =>
+    Math.abs(p.pct - best.pct) < Math.abs(acc.pct - best.pct) ? p : acc,
+    pareto[0],
+  );
+
   const isGoldDot = (p: (typeof pareto)[number]) =>
-    p.pct === best.pct && best.payoffMonth < horizon;
+    p.pct === closestToBest.pct && best.payoffMonth < horizon;
 
   const regularPoints = pareto.filter((p) => p.pct !== 0 && !isGoldDot(p));
 
