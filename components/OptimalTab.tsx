@@ -16,6 +16,13 @@ const C = {
   tooltipBody: "#9a7f5a",
 };
 
+const COLORS = {
+  gold: "#d4870a",
+  red: "#e05252",
+  purple: "#7c6af7aa",
+  beyond: "#aaaaaa55",
+};
+
 type Props = {
   budget: number;
   returnRate: number;
@@ -69,18 +76,18 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
           callbacks: {
             title: () => "",
             label: (ctx) => {
-              const p = pareto[ctx.dataIndex];
+              const raw = ctx.raw as { pct: number; payoffMonth: number; networth: number };
               return [
-                ` Invest ${p.pct}% / Loan ${100 - p.pct}%`,
+                ` Invest ${raw.pct}% / Loan ${100 - raw.pct}%`,
                 ` Payoff: ${
-                  p.payoffMonth < horizon
-                    ? (p.payoffMonth / 12).toFixed(1) +
+                  raw.payoffMonth < horizon
+                    ? (raw.payoffMonth / 12).toFixed(1) +
                       "yr (" +
-                      p.payoffMonth +
+                      raw.payoffMonth +
                       "mo)"
                     : ">" + yrLabel + " yrs"
                 }`,
-                ` Net worth at ${yrLabel}yr: S$${Math.round(p.networth).toLocaleString()}`,
+                ` Net worth at ${yrLabel}yr: S$${Math.round(raw.networth).toLocaleString()}`,
               ];
             },
           },
@@ -156,23 +163,48 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
     [],
   );
 
+  const makePoint = (p: (typeof pareto)[number]) => ({
+    x: p.payoffMonth,
+    y: p.networth,
+    pct: p.pct,
+    payoffMonth: p.payoffMonth,
+    networth: p.networth,
+  });
+
+  const isGoldDot = (p: (typeof pareto)[number]) =>
+    p.pct === best.pct && best.payoffMonth < horizon;
+
+  const regularPoints = pareto.filter((p) => p.pct !== 0 && !isGoldDot(p));
+
   const scatterData = {
     datasets: [
       {
         label: "Split",
-        data: pareto.map((p) => ({ x: p.payoffMonth, y: p.networth })),
-        backgroundColor: pareto.map((p) =>
-          p.pct === best.pct
-            ? "#d4870a"
-            : p.pct === 0
-              ? "#e05252"
-              : "#7c6af7aa",
+        data: regularPoints.map(makePoint),
+        backgroundColor: regularPoints.map((p) =>
+          p.payoffMonth >= horizon ? COLORS.beyond : COLORS.purple,
         ),
-        pointRadius: pareto.map((p) =>
-          p.pct === best.pct || p.pct === 0 ? 9 : 5,
-        ),
+        pointRadius: 5,
         pointHoverRadius: 12,
       },
+      {
+        label: "Debt-first",
+        data: pareto.filter((p) => p.pct === 0).map(makePoint),
+        backgroundColor: COLORS.red,
+        pointRadius: 9,
+        pointHoverRadius: 12,
+      },
+      ...(best.payoffMonth < horizon
+        ? [
+            {
+              label: "Optimal",
+              data: [makePoint(best)],
+              backgroundColor: COLORS.gold,
+              pointRadius: 9,
+              pointHoverRadius: 12,
+            },
+          ]
+        : []),
     ],
   };
 
@@ -212,7 +244,7 @@ export default function OptimalTab({ budget, returnRate, loanRate, loanAmount, h
       <ChartWrapper
         title="Pareto Frontier — the tradeoff curve"
         subtitle="Every dot is a different invest% split. Moving right = slower payoff. Moving up = higher net worth. The frontier shows exactly what you trade off between wealth and speed."
-        note="★ gold = mathematically optimal (max net worth) · red = debt-first (fastest payoff) · each dot = 5% increment"
+        note="★ gold = optimal (paid off within projection) · red = debt-first (fastest payoff) · grey = loan outlasts projection · each dot = 5% increment"
       >
         <Scatter
           data={scatterData as never}
