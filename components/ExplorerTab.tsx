@@ -96,6 +96,11 @@ export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }
   const netDebt = rD.netH[MONTHS];
   const diff = fmt(Math.abs(netEnd - netDebt));
   const better = netEnd >= netDebt;
+  const netVsDebt = netEnd - netDebt;
+  const diffSigned =
+    (netVsDebt >= 0 ? "+" : "−") +
+    "S$" +
+    Math.abs(Math.round(netVsDebt)).toLocaleString();
 
   let verdictHtml = "";
   if (spread > 2) {
@@ -227,6 +232,12 @@ export default function ExplorerTab({ budget, returnRate, loanRate, loanAmount }
           value={fmt(r.netH[MONTHS])}
           sub="portfolio − remaining loan"
           valueClass="invest-val"
+        />
+        <StatCard
+          label="vs Debt-first at 10yr"
+          value={diffSigned}
+          sub={netVsDebt >= 0 ? "your split wins" : "debt-first wins"}
+          valueClass={netVsDebt >= 0 ? "invest-val" : "debt-val"}
         />
       </div>
 
